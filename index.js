@@ -28,21 +28,33 @@ var inputB = `الي النهروان وذلك يوم السبت فاقام في
 /*var inputA = "الي النهروان يوم السبت فاقام به ثمانية ايام"
 var inputB = "الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام"*/
 
-var calcDiffBtn, inputBtn, inputDiv, outputDiv;
+var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, clearBtn;
 
 window.addEventListener('load', function() {
-  document.getElementById("inputA").value = inputA;
-  document.getElementById("inputB").value = inputB;
   inputDiv = calcDiffBtn = document.getElementById("inputDiv");
   outputDiv = calcDiffBtn = document.getElementById("outputDiv");
+  loadExampleLnk = document.getElementById("loadExample");
+  loadExampleLnk.addEventListener("click", loadExample);
   calcDiffBtn = document.getElementById("calcDiffButton");
   calcDiffBtn.addEventListener("click", calcDiff);
+  clearBtn = document.getElementById("clearButton");
+  clearBtn.addEventListener("click", clear);
   inputBtn =  document.getElementById("inputButton");
   inputBtn.addEventListener("click", function(){
     inputDiv.style.display="block";
     outputDiv.style.display="none";
   });
 });
+
+function loadExample(){
+  document.getElementById("inputA").value = inputA;
+  document.getElementById("inputB").value = inputB;
+}
+
+function clear(){
+  document.getElementById("inputA").value = "";
+  document.getElementById("inputB").value = "";
+}
 
 function clean(text){
     text = text.replace(/### \|+ /g, "");
@@ -120,6 +132,7 @@ function parseDiffHtml(diffHtml){
   }
   document.getElementById("aDiff").innerHTML = "<p>"+aHtml+"</p>";
   document.getElementById("bDiff").innerHTML = "<p>"+bHtml+"</p>";
+  document.getElementById("cDiff").innerHTML = diffHtml;
   console.log(aHtml);
   console.log(bHtml);
   outputDiv.style.display="block";
@@ -131,7 +144,14 @@ function calcDiff() {
   // load variables from inputs:
   var a = document.getElementById("inputA").value;
   var b = document.getElementById("inputB").value;
-
+  if (a === ""){
+    document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
+    return
+  }
+  if (b === ""){
+    document.getElementById("inputB").value = "PLEASE PROVIDE A TEXT HERE";
+    return
+  }
   // clean both strings:
   a = clean(a);
   b = clean(b);
