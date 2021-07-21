@@ -22,13 +22,15 @@ See:
 
 // initialize:
 
+var ROWS = false;  // break the output into lines for easier reading
+
 var inputA = `الي النهروان يوم السبت فاقام به ثمانية ايام وخرج اليه اهل بيته ووجوه اهل بغداد فسلموا عليه فلما كان يوم السبت الاخر دخل الي بغداد وكان قد كتب الي طاهر بن الحسين وكان بالرقة ان يوافيه بالنهروان فقدم طاهر ودخل عليه وامره ان ينزل الخيزرانية هو واصحابة ثم انه تحول فنزل قصره علي شاطء دجلة وامر حميد بن عبد الحميد وعلي بن هشام وكل من-- كان في عساكر هما ان ينزلوا في عسكره قالوا جميعا فكانوا يختلفون الي ال----مامون في كل يوم مسلمين ولباسهم الثياب الخضر ولم يكن احد يدخل عليه---- الا في خضرة-------- ولبس ذلك اهل بغداد---------- اجمعون وكانوا يخرقون كل شء راو-ه من السواد علي ا--حد الا القلانس-- فان------------ الواحد بعد الواحد كان يلبسها متخوفا ووجلا فاما قباء او علم فلم يكن احد يجترء ان يلبس شيءا من ذلك ولا يحمله فمكثوا بذلك ثمانية ايام وتكلم فيها-- بنو هاشم من ولد العباس خاصة وقالوا له  يا امير المءمنين تركت لباس -------اهل بيتك ودولتهم ولبست الخضرة قالوا وكتب اليه في ذلك قواد اهل خراسان`;
 var inputB = `الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام وخرج اليه اهل بيته والقواد ووجوه الناس فسلموا عليه وقد كان كتب الي طاهر بن الحسين من الطريق وهو بالرقة ان يوافيه الي النهروان فوافاه بها فلما كان السبت الاخر دخل بغداد ارتفاع النهار لا-ربع عشرة ليلة بقيت من صفر سنة اربع وماءتين و----لباسه ولباس اصحابه------ اقبيتهم وقلانسهم وطراداتهم واعلامهم كلها الخضرة------ فلما قدم نزل الرصافة وقدم معه طاهر فامره بنزو-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ل الخيزرانية مع -اصحابه ثم---- تحول فنزل قصره علي شط-- دجلة وامر حميد بن عبد الحميد وعلي بن هشام وكل قاءد كان في عس-كر---ه ان ي--قيم في عسكره ------------فكانوا يختلفون الي دار المامون في كل يوم ولم يكن-------------------------------- يدخل عليه احد الا في الثياب الخضر ولبس ذلك اهل بغداد وبنو هاشم اجمعون فكانوا يخرقون كل شء يرونه من السواد علي انسان الا القل-نسوة فانه كان يلبسها الواحد بعد الواحد علي ---------خوف- ووجل- فاما قباء او علم فلم يكن احد يجترء ان يلبس شيءا من ذلك ولا يحمله فمكثوا بذلك ثمانية ايام فتكلم في ذلك بنو هاشم و--ولد العباس خاصة وقالوا له- يا امير المءمنين تركت لباس اباءك واهل بيتك ودولتهم ولبست الخضرة------ وكتب اليه في ذلك قواد اهل خراسان `;
 
 /*var inputA = "الي النهروان يوم السبت فاقام به ثمانية ايام"
 var inputB = "الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام"*/
 
-var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, clearBtn;
+var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, clearBtn, rowsChk;
 
 window.addEventListener('load', function() {
   inputDiv = calcDiffBtn = document.getElementById("inputDiv");
@@ -39,12 +41,16 @@ window.addEventListener('load', function() {
   calcDiffBtn.addEventListener("click", calcDiff);
   clearBtn = document.getElementById("clearButton");
   clearBtn.addEventListener("click", clear);
+  rowsChk = document.getElementById("rowsCheck");
+  rowsChk.addEventListener("change", calcDiff);
   inputBtn =  document.getElementById("inputButton");
   inputBtn.addEventListener("click", function(){
     inputDiv.style.display="block";
     outputDiv.style.display="none";
   });
 });
+
+
 
 function loadExample(){
   document.getElementById("inputA").value = inputA;
@@ -57,15 +63,15 @@ function clear(){
 }
 
 function clean(text){
-    text = text.replace(/### \|+ /g, "");
-    text = text.replace(/^# /g, "");
-    text = text.replace(/-+/g, "");
-    text = text.replace(/\r/g, "");
-    text = text.replace(/\n+~~/g, " ");
-    text = text.replace(/~~/g, "");
-    text = text.replace(/[\n ]*ms\d+[\n ]*/g, " ");
-    text = text.replace(/[\n ]*PageV[^P]+P\d+[a-bA-B]?[\n ]*/g, " ");
-    return text
+  text = text.replace(/\r/g, "");
+  text = text.replace(/### \|+ /g, "");
+  text = text.replace(/\n# /g, "\n");
+  text = text.replace(/-+/g, "");
+  text = text.replace(/\n+~~/g, " ");
+  text = text.replace(/~~/g, "");
+  text = text.replace(/[\n ]*ms\d+[\n ]*/g, " ");
+  text = text.replace(/[\n ]*PageV[^P]+P\d+[a-bA-B]?[\n ]*/g, " ");
+  return text
 }
 
 function getLineOffsets(s){
@@ -78,8 +84,22 @@ function getLineOffsets(s){
   return offsets
 }
 
+function displayRow(aHtml, bHtml){
+  let newRow = `
+    <div class="row">
+      <div class="cell">
+        <div class="output">${aHtml}</div>
+      </div>
+      <div class="cell">
+        <div class="output">${bHtml}</div>
+      </div>
+    </div>`
+  document.getElementsByClassName("container")[0].innerHTML += newRow;
+}
+
 // parse the wikiEdDiff html into two separate strings
 function parseDiffHtml(diffHtml){
+  document.getElementsByClassName("container")[0].innerHTML = "";
   var parser = new DOMParser();
   var wikiHtml = parser.parseFromString(diffHtml, "text/html");
   console.log(wikiHtml);
@@ -95,6 +115,11 @@ function parseDiffHtml(diffHtml){
       console.log("UNMARKED: COMMON TEXT "+c.textContent);
       aHtml += c.textContent;
       bHtml += c.textContent;
+      if (ROWS && (aHtml.length > 100 || bHtml.length > 100)){
+        displayRow(aHtml, bHtml);
+        aHtml = "";
+        bHtml = "";
+      }
     } else if (c.classList.contains("wikEdDiffInsert")) {
       console.log("MARK IN B (INSERTION)");
       bHtml += '<span class="added">'+c.textContent+'</span>';
@@ -130,8 +155,22 @@ function parseDiffHtml(diffHtml){
       }
     }
   }
-  document.getElementById("aDiff").innerHTML = "<p>"+aHtml+"</p>";
-  document.getElementById("bDiff").innerHTML = "<p>"+bHtml+"</p>";
+  if (ROWS){
+    displayRow(aHtml, bHtml);
+  } else {
+    let newRow = `
+    <div class="row">
+      <div class="cell">
+        <div id="aDiff" class="output">${aHtml}</div>
+      </div>
+      <div class="cell">
+        <div id="bDiff" class="output">${bHtml}</div>
+      </div>
+    </div>`
+    document.getElementsByClassName("container")[0].innerHTML = newRow;
+  }
+  //document.getElementById("aDiff").innerHTML = "<p>"+aHtml+"</p>";
+  //document.getElementById("bDiff").innerHTML = "<p>"+bHtml+"</p>";
   document.getElementById("cDiff").innerHTML = diffHtml;
   console.log(aHtml);
   console.log(bHtml);
@@ -144,6 +183,7 @@ function calcDiff() {
   // load variables from inputs:
   var a = document.getElementById("inputA").value;
   var b = document.getElementById("inputB").value;
+  ROWS = rowsChk.checked;
   if (a === ""){
     document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
     return
@@ -152,7 +192,7 @@ function calcDiff() {
     return
   } else if (a === b){
     window.alert("Two identical texts provided!");
-    return    
+    return
   }
 
   // clean both strings:
