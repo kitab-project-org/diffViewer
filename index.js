@@ -147,11 +147,14 @@ function calcDiff() {
   if (a === ""){
     document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
     return
-  }
-  if (b === ""){
-    document.getElementById("inputB").value = "PLEASE PROVIDE A TEXT HERE";
+  } else if (b === ""){
+    document.getElementById("inputB").value = "PLEASE PROVIDE A TEXT HERE TOO";
     return
+  } else if (a === b){
+    window.alert("Two identical texts provided!");
+    return    
   }
+
   // clean both strings:
   a = clean(a);
   b = clean(b);
