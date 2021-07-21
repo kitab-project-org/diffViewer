@@ -1,0 +1,100 @@
+
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+  textarea {
+    font-family: Courier;
+    font-size: 16;
+    direction: rtl;
+    width: 48%;
+    height: 90%;
+    padding-right: 10px;
+    padding-left: 10px;
+    resize: none;
+  }
+
+  .added {
+    background-color: lightgreen;
+  }
+  .removed {
+    background-color: gold;
+  }
+  .moved {
+    background-color: lightgrey;
+  }
+
+  #inputDiv {
+    display: block;
+    height: 90%;
+  }
+
+  #outputDiv {
+    display: none;
+    height: 90%;
+  }
+
+  button {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .output {
+    width:48%;
+    height: 90%;
+    border: 1px solid black;
+    display: inline-grid;
+    padding-right: 10px;
+    padding-left: 10px;
+    direction: rtl;
+    font-family: Courier;
+    font-size: 16;
+    overflow-y: auto;
+  }
+  .output p {
+    margin-top = 0px;
+    margin-bottom = 0px;
+  }
+</style>
+
+<script src="wikiEdDiff.js"></script>
+<script src="index.js"></script>
+
+</head>
+
+<body>
+
+<h1>Diff viewer</h1>
+<div id="inputDiv">
+  <p>Paste the two strings you want to compare in the fields below:</p>
+  <div>
+    <textarea id="inputA"></textarea>
+    <textarea id="inputB"></textarea>
+  </div>
+  <div>
+    <button type="button" id="calcDiffButton">Display diff</button>
+  </div>
+</div>
+
+<div id="outputDiv">
+  <p>
+    Color coding:
+    <span class="added">only in text B</span>
+    <span> </span>
+    <span class="removed">only in text A</span>
+    <span> </span>
+    <span class="moved"> in text A and B but in different position</span>
+  </p>
+  <div>
+    <div id="aDiff" class="output"></div>
+    <div id="bDiff" class="output"></div>
+  </div>
+  <div>
+    <button type="button" id="inputButton">Show input</button>
+  </div>
+</div>
+
+</body>
+</html>
