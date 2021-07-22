@@ -30,19 +30,57 @@ var inputB = `الي النهروان وذلك يوم السبت فاقام في
 /*var inputA = "الي النهروان يوم السبت فاقام به ثمانية ايام"
 var inputB = "الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام"*/
 
-var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, clearBtn, rowsChk;
+var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, cleanChk, arCharInp, fontSizeInp;
 
 window.addEventListener('load', function() {
   inputDiv = calcDiffBtn = document.getElementById("inputDiv");
   outputDiv = calcDiffBtn = document.getElementById("outputDiv");
   loadExampleLnk = document.getElementById("loadExample");
   loadExampleLnk.addEventListener("click", loadExample);
+  resizeCont = document.getElementsByClassName("resize-container")[0];
+  var resizer = document.createElement('div');
+  resizer.className = 'resizer';
+  resizer.style.width = '10px';
+  resizer.style.height = "100%";
+  resizer.style.position = 'absolute';
+  resizer.style.right = 0;
+  resizer.style.bottom = "50%";
+  resizer.style.cursor = 'col-resize';
+  resizer.style.marginLeft = "10px";
+  //resizer.src = "img/resize-icon.jpg";
+  /*var resizeIcon = document.createElement('img');
+  resizeIcon
+  resizeIcon.width = "100%";
+  resizeIcon.height = "100%";
+  resizeIcon.objectFit = "contain";
+
+  resizer.appendChild(resizeIcon);*/
+  resizeCont.appendChild(resizer);
+  resizer.addEventListener('mousedown', initResize, false);
+  /*resizeCont.addEventListener('resize', function(){
+    if (outputDiv.style.display !== "none"){
+      calcDiff();
+    }
+  });*/
   calcDiffBtn = document.getElementById("calcDiffButton");
   calcDiffBtn.addEventListener("click", calcDiff);
   clearBtn = document.getElementById("clearButton");
   clearBtn.addEventListener("click", clear);
   rowsChk = document.getElementById("rowsCheck");
-  rowsChk.addEventListener("change", calcDiff);
+  rowsChk.addEventListener("change",  function(){
+    if (outputDiv.style.display !== "none"){
+      calcDiff();
+    }
+  });
+  fontSizeInp = document.getElementById("fontSizeInput");
+  fontSizeInp.addEventListener("change",  changeFontSize);
+  arCharInp = document.getElementById("arCharInput");
+  arCharInp.addEventListener("change",  function(){
+    if (outputDiv.style.display !== "none"){
+      calcDiff();
+    }
+  });
+  cleanChk = document.getElementById("cleanCheck");
   inputBtn =  document.getElementById("inputButton");
   inputBtn.addEventListener("click", function(){
     inputDiv.style.display="block";
@@ -50,7 +88,11 @@ window.addEventListener('load', function() {
   });
 });
 
-
+window.addEventListener('resize', function(){
+  if (outputDiv.style.display !== "none"){
+    calcDiff();
+  }
+});
 
 function loadExample(){
   document.getElementById("inputA").value = inputA;
@@ -74,6 +116,11 @@ function clean(text){
   return text
 }
 
+// count the number of Arabic characters in a string using OpenITI character regex
+function charLength(s){
+  return charCount(s, arCharExtRegex);
+}
+
 function getLineOffsets(s){
   var offsets = [];
   for (let i=0; i<s.length; i++){
@@ -84,22 +131,41 @@ function getLineOffsets(s){
   return offsets
 }
 
-function displayRow(aHtml, bHtml){
-  let newRow = `
-    <div class="row">
-      <div class="cell">
-        <div class="output">${aHtml}</div>
-      </div>
-      <div class="cell">
-        <div class="output">${bHtml}</div>
-      </div>
-    </div>`
-  document.getElementsByClassName("container")[0].innerHTML += newRow;
+function displayDiff(aHtml, bHtml){
+  let newRow = document.getElementById("outputTable").insertRow(-1);
+  let cellA = newRow.insertCell(0);
+  cellA.innerHTML = aHtml;
+  let cellB = newRow.insertCell(1);
+  cellB.innerHTML = bHtml;
+  console.log("new row added");
 }
+
+function changeFontSize(){
+  let fs = parseInt(fontSizeInp.value);
+  document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
+}
+
+// allow resizing the output container: code from https://jsfiddle.net/RainStudios/mw786v1w/
+function initResize(e) {
+   window.addEventListener('mousemove', Resize, false);
+   window.addEventListener('mouseup', stopResize, false);
+}
+function Resize(e) {
+   resizeCont.style.width = (e.clientX - resizeCont.offsetLeft) + 'px';
+   //element.style.height = (e.clientY - element.offsetTop) + 'px';
+}
+function stopResize(e) {
+    window.removeEventListener('mousemove', Resize, false);
+    window.removeEventListener('mouseup', stopResize, false);
+    calcDiff();
+}
+
+
 
 // parse the wikiEdDiff html into two separate strings
 function parseDiffHtml(diffHtml){
-  document.getElementsByClassName("container")[0].innerHTML = "";
+  //document.getElementsByClassName("container")[0].innerHTML = "";
+  document.getElementById("outputTable").innerHTML = "";
   var parser = new DOMParser();
   var wikiHtml = parser.parseFromString(diffHtml, "text/html");
   console.log(wikiHtml);
@@ -115,8 +181,8 @@ function parseDiffHtml(diffHtml){
       console.log("UNMARKED: COMMON TEXT "+c.textContent);
       aHtml += c.textContent;
       bHtml += c.textContent;
-      if (ROWS && (aHtml.length > 100 || bHtml.length > 100)){
-        displayRow(aHtml, bHtml);
+      if (ROWS && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS)){
+        displayDiff(aHtml, bHtml);
         aHtml = "";
         bHtml = "";
       }
@@ -155,20 +221,7 @@ function parseDiffHtml(diffHtml){
       }
     }
   }
-  if (ROWS){
-    displayRow(aHtml, bHtml);
-  } else {
-    let newRow = `
-    <div class="row">
-      <div class="cell">
-        <div id="aDiff" class="output">${aHtml}</div>
-      </div>
-      <div class="cell">
-        <div id="bDiff" class="output">${bHtml}</div>
-      </div>
-    </div>`
-    document.getElementsByClassName("container")[0].innerHTML = newRow;
-  }
+  displayDiff(aHtml, bHtml);
   //document.getElementById("aDiff").innerHTML = "<p>"+aHtml+"</p>";
   //document.getElementById("bDiff").innerHTML = "<p>"+bHtml+"</p>";
   document.getElementById("cDiff").innerHTML = diffHtml;
@@ -176,6 +229,47 @@ function parseDiffHtml(diffHtml){
   console.log(bHtml);
   outputDiv.style.display="block";
   inputDiv.style.display="none";
+
+  // create download link:
+  /*
+  // svg approach: does not work well (not whole table, no highlighting)
+  let table = document.getElementById("outputTable").innerHTML;
+  let svg = `<?xml version="1.0" standalone="yes"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <foreignObject x="10" y="10" width="100" height="150">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      ${table}
+    </body>
+  </foreignObject>
+</svg>`
+  console.log(svg);
+  let href = 'data:text/plain;charset=utf-8,'+svg;
+  */
+  /*
+  // png download using html2canvas: does not work well: parts of text missing!
+  html2canvas(document.getElementById("outputTable")).then(canvas => {
+      let img = canvas.toDataURL("image/png");
+      let href =  img.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
+      let downloadLink = document.getElementById("downloadLink");
+      downloadLink.setAttribute('href', href);
+      downloadLink.setAttribute("download", "diff.png");
+      console.log(href);
+  });
+  */
+  // png download using dom-to-image (https://github.com/tsayen/dom-to-image):
+  domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
+      let downloadLink = document.getElementById("pngDownloadLink");
+      downloadLink.setAttribute('href', dataUrl);
+      downloadLink.setAttribute("download", "diff.png");
+      //console.log(dataUrl);
+  });
+  domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
+      let downloadLink = document.getElementById("svgDownloadLink");
+      downloadLink.setAttribute('href', dataUrl);
+      downloadLink.setAttribute("download", "diff.svg");
+      //console.log(dataUrl);
+  });
+
 }
 
 
@@ -184,6 +278,8 @@ function calcDiff() {
   var a = document.getElementById("inputA").value;
   var b = document.getElementById("inputB").value;
   ROWS = rowsChk.checked;
+  CLEAN = cleanChk.checked;
+  ARCHARS = parseInt(arCharInp.value);
   if (a === ""){
     document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
     return
@@ -196,21 +292,14 @@ function calcDiff() {
   }
 
   // clean both strings:
-  a = clean(a);
-  b = clean(b);
-
-  // get the offsets of the new lines in both strings:
-  /*aLineOffsets = getLineOffsets(a);
-  console.log(aLineOffsets);
-  a = a.replace(/\n+/g, "");
-  bLineOffsets = getLineOffsets(b);
-  console.log(bLineOffsets);
-  b = b.replace(/\n+/g, "");*/
+  if (CLEAN){
+    a = clean(a);
+    b = clean(b);
+  }
 
   // create the diff:
   var wikEdDiff = new WikEdDiff();
-  var diffHtml =   wikEdDiff.diff(a, b);
+  var diffHtml =  wikEdDiff.diff(a, b);
   console.log(diffHtml);
   parseDiffHtml(diffHtml);
-
 }

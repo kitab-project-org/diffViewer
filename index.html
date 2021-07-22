@@ -9,12 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
 
 <style>
+  :root {
+    --ar-chars-font-size: 16px;
+  }
   body {
     font-family: 'Roboto', sans-serif;
   }
   textarea {
     font-family: Courier;
-    font-size: 16;
+    font-size: var(--ar-chars-font-size);
     direction: rtl;
     border: 1px solid lightgrey;
     width: 49%;
@@ -38,7 +41,8 @@
 
   #inputDiv {
     display: block;
-    height: 90%;
+    height: 80%;
+    margin-bottom: 10px;
   }
 
   button {
@@ -49,43 +53,56 @@
 
   #outputDiv {
     display: none;
-    height: 90%;
+    height: 80%;
   }
-
-  .container {
-    display: table;
-    width: 100%;
-    height: 90%;
-  }
-  .row {
-    display:table-row;
-  }
-  .cell{
-    display:table-cell;
-    width: 45%;
-    padding-right: 5px;
-  }
-  .output {
-    padding-right: 10px;
-    padding-left: 10px;
-    direction: rtl;
-    font-family: Courier;
-    font-size: 16;
+  .resize-container {
+    width: 95%;
+    height: 80%;
+    position: relative;
+    padding: 10px;
     overflow-y: auto;
   }
-  .output p {
-    margin-top = 0px;
-    margin-bottom = 0px;
+  .container {
+    overflow-y: inherit;
+    border: solid 1px lightgrey;
   }
+  table {
+    padding-right: 10px;
+    padding-left: 10px;
+    font-family: Courier;
+    font-size: var(--ar-chars-font-size);
+    border-collapse: collapse;
+  }
+  td{
+    width: 48%;
+    direction: rtl;
+    padding-right: 10px;
+    padding-left: 10px;
+    border-left: solid 1px lightgrey;
+    vertical-align: top;
+  }
+  td:first-child {
+    border-left: solid 0px lightgrey;
+  }
+
   #cDiff {
     margin: 0 auto;
     display: none;
   }
+  .num-input {
+    width: 40px;
+    border: solid 1px lightgrey;
+    direction: rtl;
+  }
 
 </style>
 
-<script src="wikiEdDiff.js"></script>
-<script src="index.js"></script>
+<script src="js/wikiEdDiff.js"></script>
+<script src="js/openITI.js"></script>
+<script src="js/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js" integrity="sha512-01CJ9/g7e8cUmY0DFTMcUw/ikS799FHiOA0eyHsUWfOetgbx/t6oV4otQ5zXKQyIrQGTHSmRVPIgrgLcZi/WMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="js/index.js"></script>
+
 
 </head>
 
@@ -117,18 +134,38 @@
       (not highlighted: in texts A and B)
     </p>
   </div>
-  <div class="container">
-
+  <div class="resize-container">
+    <div class="container">
+      <table id="outputTable"></table>
+    </div>
   </div>
   <div>
+    <span>Download diff as <a id="svgDownloadLink">svg</a> or <a id="pngDownloadLink">png</a> file </span>
     <button type="button" id="inputButton">Show input</button>
-    <input type="checkbox" id="rowsCheck" name="rowsCheck">
-    <label for="rowsCheck">divide the output into lines for easier reading</label>
   </div>
 </div>
 <div id="outputDivSingle">
   <div id="cDiff"></div>
 </div>
+<div id="optionsDiv">
+  <h3>Options: </h3>
+  <div>
+    <label for="fontSizeInput">Font size: </label>
+    <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="16">
+    <label for="fontSizeInput">px</label>
+    <br>
+    <input type="checkbox" id="rowsCheck" name="rowsCheck">
+    <label for="rowsCheck">
+      divide the output into lines of max.
+      <input type="text" class="num-input" id="arCharInput" name="arCharInput" value="20">
+      characters for easier reading
+    </label>
+    <br>
+    <input type="checkbox" id="cleanCheck" name="cleanCheck" checked>
+    <label for="cleanCheck">remove OpenITI tags from texts</label>
+  </div>
+</div>
+
 
 
 </body>
