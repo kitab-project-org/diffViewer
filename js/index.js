@@ -23,14 +23,39 @@ See:
 // initialize:
 
 var ROWS = false;  // break the output into lines for easier reading
+var CLEAN = true;
 
 var inputA = `الي النهروان يوم السبت فاقام به ثمانية ايام وخرج اليه اهل بيته ووجوه اهل بغداد فسلموا عليه فلما كان يوم السبت الاخر دخل الي بغداد وكان قد كتب الي طاهر بن الحسين وكان بالرقة ان يوافيه بالنهروان فقدم طاهر ودخل عليه وامره ان ينزل الخيزرانية هو واصحابة ثم انه تحول فنزل قصره علي شاطء دجلة وامر حميد بن عبد الحميد وعلي بن هشام وكل من-- كان في عساكر هما ان ينزلوا في عسكره قالوا جميعا فكانوا يختلفون الي ال----مامون في كل يوم مسلمين ولباسهم الثياب الخضر ولم يكن احد يدخل عليه---- الا في خضرة-------- ولبس ذلك اهل بغداد---------- اجمعون وكانوا يخرقون كل شء راو-ه من السواد علي ا--حد الا القلانس-- فان------------ الواحد بعد الواحد كان يلبسها متخوفا ووجلا فاما قباء او علم فلم يكن احد يجترء ان يلبس شيءا من ذلك ولا يحمله فمكثوا بذلك ثمانية ايام وتكلم فيها-- بنو هاشم من ولد العباس خاصة وقالوا له  يا امير المءمنين تركت لباس -------اهل بيتك ودولتهم ولبست الخضرة قالوا وكتب اليه في ذلك قواد اهل خراسان`;
 var inputB = `الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام وخرج اليه اهل بيته والقواد ووجوه الناس فسلموا عليه وقد كان كتب الي طاهر بن الحسين من الطريق وهو بالرقة ان يوافيه الي النهروان فوافاه بها فلما كان السبت الاخر دخل بغداد ارتفاع النهار لا-ربع عشرة ليلة بقيت من صفر سنة اربع وماءتين و----لباسه ولباس اصحابه------ اقبيتهم وقلانسهم وطراداتهم واعلامهم كلها الخضرة------ فلما قدم نزل الرصافة وقدم معه طاهر فامره بنزو-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ل الخيزرانية مع -اصحابه ثم---- تحول فنزل قصره علي شط-- دجلة وامر حميد بن عبد الحميد وعلي بن هشام وكل قاءد كان في عس-كر---ه ان ي--قيم في عسكره ------------فكانوا يختلفون الي دار المامون في كل يوم ولم يكن-------------------------------- يدخل عليه احد الا في الثياب الخضر ولبس ذلك اهل بغداد وبنو هاشم اجمعون فكانوا يخرقون كل شء يرونه من السواد علي انسان الا القل-نسوة فانه كان يلبسها الواحد بعد الواحد علي ---------خوف- ووجل- فاما قباء او علم فلم يكن احد يجترء ان يلبس شيءا من ذلك ولا يحمله فمكثوا بذلك ثمانية ايام فتكلم في ذلك بنو هاشم و--ولد العباس خاصة وقالوا له- يا امير المءمنين تركت لباس اباءك واهل بيتك ودولتهم ولبست الخضرة------ وكتب اليه في ذلك قواد اهل خراسان `;
 
+var inputA = `على ماء النيل، تمتد فتعم «1» المزارع من
+~~حد أسوان إلى حد الاسكندرية وسائر الريف، فيقيم الماء من «2» عند ابتداء
+~~الحر إلى ms051 الخريف، ثم ينصرف فيزرع ثم لا يسقى بعد ذلك، وأرض مصر لا تمطر ولا
+~~تثلج،
+# وليس بأرض مصر مدينة يجرى فيها الماء «3» دائما غير الفيوم، والفيوم
+~~هذه مدينة وسطة، يقال إن يوسف النبي عليه السلام اتخذ لهم مجرى يدوم لهم
+~~فيه الماء، وقوم بحجارة وسماء اللاهون.
+# وأما النيل فإن ابتداء مائه لا يعلم، وذلك أنه يخرج من مفازة من وراء أرض
+~~الزنج لا تسلك، حتى ينتهى إلى حد الزنج، ثم يقطع فى مفاوز وعمارات أرض
+~~النوبة، فيجرى على عمارات متصلة إلى أن يقع فى أرض مصر،`
+var inputB = `بماء النيل من حد اسوان
+~~الى حد الإسكندرية والباطن ويقيم الماء فى أرضهم بالريف والحوف منذ امتداد
+~~الحر الى الخريف «11» وينضب على ما @firstP@قدمت ذكره فيزرع ولا يحتاج الى سقى ولا
+~~مطر من بعد ذلك، وأرض مصر لا تمطر ولا تثلج، وليس بأرض مصر مدينة ms124 يجرى فيها
+~~الماء من غير حاجة الى زيادة النيل إلا الفيوم والفيوم اسم الإقليم
+~~وبالفيوم مدينة وسطة ذات جانبين تعرف بالفيوم ويقال أن يوسف النبي عليه
+~~السلام اتخذ لهم مجرى وزنه ليدوم لهم دخول الماء فيه وقومه بالحجارة
+~~المنضدة وسماه اللاهون «17» ،
+# (16) وماء النيل فلا يعلم أحد مبتدأه وذلك
+~~أنه يخرج من مفاوز وراء أرض الزنج لا تسلك حتى ينتهى الى حد الزنج ويقطع فى
+~~مفاوز النوبة وعماراتهم فيجرى لهم فى عمارات متصلة الى أن يقع فى أرض مصر،`
+
 /*var inputA = "الي النهروان يوم السبت فاقام به ثمانية ايام"
 var inputB = "الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام"*/
 
-var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, cleanChk, arCharInp, fontSizeInp;
+var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, punctCheck, punct,
+cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck,
+normalizeAlif, normalizeYa, normalizeHa;
 
 window.addEventListener('load', function() {
   inputDiv = calcDiffBtn = document.getElementById("inputDiv");
@@ -40,23 +65,22 @@ window.addEventListener('load', function() {
   resizeCont = document.getElementsByClassName("resize-container")[0];
   var resizer = document.createElement('div');
   resizer.className = 'resizer';
+  resizer.title = "resize the diff";
   resizer.style.width = '10px';
   resizer.style.height = "100%";
   resizer.style.position = 'absolute';
   resizer.style.right = 0;
-  resizer.style.bottom = "50%";
+  resizer.style.bottom = "0";
   resizer.style.cursor = 'col-resize';
   resizer.style.marginLeft = "10px";
-  //resizer.src = "img/resize-icon.jpg";
-  /*var resizeIcon = document.createElement('img');
-  resizeIcon
-  resizeIcon.width = "100%";
-  resizeIcon.height = "100%";
-  resizeIcon.objectFit = "contain";
-
-  resizer.appendChild(resizeIcon);*/
+  resizer.setAttribute("onmouseover", "this.style.background='lightgrey'");
+  resizer.setAttribute("onmouseout", "this.style.background='white'");
   resizeCont.appendChild(resizer);
+  //var resizer = document.getElementsByClassName("resizer")[0];
   resizer.addEventListener('mousedown', initResize, false);
+  resizer.addEventListener('hover', function(){
+    resizer.style.color = "lightgrey";
+  })
   /*resizeCont.addEventListener('resize', function(){
     if (outputDiv.style.display !== "none"){
       calcDiff();
@@ -67,20 +91,20 @@ window.addEventListener('load', function() {
   clearBtn = document.getElementById("clearButton");
   clearBtn.addEventListener("click", clear);
   rowsChk = document.getElementById("rowsCheck");
-  rowsChk.addEventListener("change",  function(){
-    if (outputDiv.style.display !== "none"){
-      calcDiff();
-    }
-  });
+  rowsChk.addEventListener("change",  calcDiffIfVisible);
   fontSizeInp = document.getElementById("fontSizeInput");
   fontSizeInp.addEventListener("change",  changeFontSize);
   arCharInp = document.getElementById("arCharInput");
-  arCharInp.addEventListener("change",  function(){
-    if (outputDiv.style.display !== "none"){
-      calcDiff();
-    }
-  });
+  arCharInp.addEventListener("change",  calcDiffIfVisible);
   cleanChk = document.getElementById("cleanCheck");
+  punctCheck = document.getElementById("punctCheck");
+  punctCheck.addEventListener("change",  calcDiffIfVisible);
+  normalizeAlifCheck = document.getElementById("normalizeAlifCheck");
+  normalizeAlifCheck.addEventListener("change",  calcDiffIfVisible);
+  normalizeYaCheck = document.getElementById("normalizeYaCheck");
+  normalizeYaCheck.addEventListener("change",  calcDiffIfVisible);
+  normalizeHaCheck = document.getElementById("normalizeHaCheck");
+  normalizeHaCheck.addEventListener("change",  calcDiffIfVisible);
   inputBtn =  document.getElementById("inputButton");
   inputBtn.addEventListener("click", function(){
     inputDiv.style.display="block";
@@ -94,6 +118,12 @@ window.addEventListener('resize', function(){
   }
 });
 
+function calcDiffIfVisible (){
+  if (outputDiv.style.display !== "none"){
+    calcDiff();
+  }
+}
+
 function loadExample(){
   document.getElementById("inputA").value = inputA;
   document.getElementById("inputB").value = inputB;
@@ -105,20 +135,41 @@ function clear(){
 }
 
 function clean(text){
-  text = text.replace(/\r/g, "");
-  text = text.replace(/### \|+ /g, "");
-  text = text.replace(/\n# /g, "\n");
-  text = text.replace(/-+/g, "");
-  text = text.replace(/\n+~~/g, " ");
-  text = text.replace(/~~/g, "");
-  text = text.replace(/[\n ]*ms\d+[\n ]*/g, " ");
-  text = text.replace(/[\n ]*PageV[^P]+P\d+[a-bA-B]?[\n ]*/g, " ");
+  if (CLEAN) {
+    text = text.replace(/\r/g, "");
+    text = text.replace(/### \|+ /g, "");
+    text = text.replace(/\n# /g, "\n");
+    text = text.replace(/-+/g, "");
+    text = text.replace(/\n+~~/g, " ");
+    text = text.replace(/~~/g, "");
+    text = text.replace(/[\n ]*ms\d+[\n ]*/g, " ");
+    text = text.replace(/[\n ]*PageV[^P]+P\d+[a-bA-B]?[\n ]*/g, " ");
+    text = text.replace(/[«\(\[/]\d+[»\)\]/]/g, "");
+    text = text.replace(/@[a-zA-Z@\d]+/g, "");
+  }
+  if (normalizeAlif){
+    text = text.replace(/[أإآ]/g, "ا");
+  }
+  if (normalizeYa){
+    text = text.replace(/[یى]/g, "ي");
+  }
+  if (normalizeHa){
+    text = text.replace(/ة/g, "ه");
+  }
+  if (punct) {
+    text = text.replace(/[.?!:،,’]/g, "")
+  }
   return text
 }
 
 // count the number of Arabic characters in a string using OpenITI character regex
 function charLength(s){
-  return charCount(s, arCharExtRegex);
+  if (s) {
+    return charCount(s, arCharExtRegex);
+  } else {
+    return 0;
+  }
+
 }
 
 function getLineOffsets(s){
@@ -181,7 +232,7 @@ function parseDiffHtml(diffHtml){
       console.log("UNMARKED: COMMON TEXT "+c.textContent);
       aHtml += c.textContent;
       bHtml += c.textContent;
-      if (ROWS && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS)){
+      if (ROWS && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
         displayDiff(aHtml, bHtml);
         aHtml = "";
         bHtml = "";
@@ -279,6 +330,10 @@ function calcDiff() {
   var b = document.getElementById("inputB").value;
   ROWS = rowsChk.checked;
   CLEAN = cleanChk.checked;
+  punct = punctCheck.checked;
+  normalizeAlif = normalizeAlifCheck.checked;
+  normalizeHa = normalizeHaCheck.checked;
+  normalizeYa = normalizeYaCheck.checked;
   ARCHARS = parseInt(arCharInp.value);
   if (a === ""){
     document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
@@ -292,10 +347,9 @@ function calcDiff() {
   }
 
   // clean both strings:
-  if (CLEAN){
-    a = clean(a);
-    b = clean(b);
-  }
+  a = clean(a);
+  b = clean(b);
+
 
   // create the diff:
   var wikEdDiff = new WikEdDiff();

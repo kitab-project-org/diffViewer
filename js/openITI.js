@@ -1,5 +1,5 @@
 /*
-Functions and 
+Functions and
 */
 
 // define regular expression to define Arabic characters and tokens:
@@ -114,7 +114,7 @@ function tokenize(s, tokRegex){
   return m;
 }
 
-// count the number of times each token is present in a string 
+// count the number of times each token is present in a string
 // using a regex that defines a token:
 
 function wordCount(s, tokRegex){
@@ -125,9 +125,14 @@ function wordCount(s, tokRegex){
     )
 }
 
-// count characters in a string using a regex 
+// count characters in a string using a regex
 // that defines what characters should be considered
 
 function charCount(s, charRegex){
-  return s.match(charRegex).length;
+   let chars = s.match(charRegex)
+   if (chars) {
+     return chars.length;
+   } else {
+     return 0;
+   }
 }

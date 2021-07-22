@@ -41,7 +41,7 @@
 
   #inputDiv {
     display: block;
-    height: 80%;
+    height: 70%;
     margin-bottom: 10px;
   }
 
@@ -53,18 +53,18 @@
 
   #outputDiv {
     display: none;
-    height: 80%;
+    position: relative;
+    height: 70%;
   }
   .resize-container {
     width: 95%;
-    height: 80%;
+    height: 75%;
     position: relative;
     padding: 10px;
     overflow-y: auto;
+    border: solid 1px lightgrey;
   }
   .container {
-    overflow-y: inherit;
-    border: solid 1px lightgrey;
   }
   table {
     padding-right: 10px;
@@ -84,7 +84,10 @@
   td:first-child {
     border-left: solid 0px lightgrey;
   }
-
+  #downloadDiv {
+    position: absolute;
+    bottom: 0;
+  }
   #cDiff {
     margin: 0 auto;
     display: none;
@@ -110,7 +113,7 @@
 
 <h1>OpenITI Diff viewer</h1>
 <div id="inputDiv">
-  <p>Paste the two strings you want to compare in the fields below or <a id="loadExample" href="#">load an example</a>:</p>
+  <p>Paste the two strings you want to compare in the fields below (or <a id="loadExample" href="#">load an example</a>) and click the display button:</p>
   <div>
     <textarea id="inputA"></textarea>
     <textarea id="inputB"></textarea>
@@ -139,8 +142,8 @@
       <table id="outputTable"></table>
     </div>
   </div>
-  <div>
-    <span>Download diff as <a id="svgDownloadLink">svg</a> or <a id="pngDownloadLink">png</a> file </span>
+  <div id="downloadDiv">
+    <span>Download diff (full-size) as <a id="svgDownloadLink">svg</a> or <a id="pngDownloadLink">png</a> file </span>
     <button type="button" id="inputButton">Show input</button>
   </div>
 </div>
@@ -163,6 +166,17 @@
     <br>
     <input type="checkbox" id="cleanCheck" name="cleanCheck" checked>
     <label for="cleanCheck">remove OpenITI tags from texts</label>
+    <br>
+    <input type="checkbox" id="punctCheck" name="punctCheck">
+    <label for="punctCheck">remove punctuation</label>
+    <br>
+    <label for="normalizeAlifs">Normalize: </label>
+    <input type="checkbox" id="normalizeAlifCheck" name="normalizeAlifCheck">
+    <label for="normalizeAlif">Alifs (أ = ا = إ = آ) </label>
+    <input type="checkbox" id="normalizeYaCheck" name="normalizeYaCheck">
+    <label for="normalizeFinalYa">alif maqṣūra / final yā' (ي = ى) </label>
+    <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck">
+    <label for="normalizeFinalHa">tā marbūṭa / final hā' (ة = ه)</label>
   </div>
 </div>
 
