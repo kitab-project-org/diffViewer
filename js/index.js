@@ -28,7 +28,7 @@ var CLEAN = true;
 var inputA = `الي النهروان يوم السبت فاقام به ثمانية ايام وخرج اليه اهل بيته ووجوه اهل بغداد فسلموا عليه فلما كان يوم السبت الاخر دخل الي بغداد وكان قد كتب الي طاهر بن الحسين وكان بالرقة ان يوافيه بالنهروان فقدم طاهر ودخل عليه وامره ان ينزل الخيزرانية هو واصحابة ثم انه تحول فنزل قصره علي شاطء دجلة وامر حميد بن عبد الحميد وعلي بن هشام وكل من-- كان في عساكر هما ان ينزلوا في عسكره قالوا جميعا فكانوا يختلفون الي ال----مامون في كل يوم مسلمين ولباسهم الثياب الخضر ولم يكن احد يدخل عليه---- الا في خضرة-------- ولبس ذلك اهل بغداد---------- اجمعون وكانوا يخرقون كل شء راو-ه من السواد علي ا--حد الا القلانس-- فان------------ الواحد بعد الواحد كان يلبسها متخوفا ووجلا فاما قباء او علم فلم يكن احد يجترء ان يلبس شيءا من ذلك ولا يحمله فمكثوا بذلك ثمانية ايام وتكلم فيها-- بنو هاشم من ولد العباس خاصة وقالوا له  يا امير المءمنين تركت لباس -------اهل بيتك ودولتهم ولبست الخضرة قالوا وكتب اليه في ذلك قواد اهل خراسان`;
 var inputB = `الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام وخرج اليه اهل بيته والقواد ووجوه الناس فسلموا عليه وقد كان كتب الي طاهر بن الحسين من الطريق وهو بالرقة ان يوافيه الي النهروان فوافاه بها فلما كان السبت الاخر دخل بغداد ارتفاع النهار لا-ربع عشرة ليلة بقيت من صفر سنة اربع وماءتين و----لباسه ولباس اصحابه------ اقبيتهم وقلانسهم وطراداتهم واعلامهم كلها الخضرة------ فلما قدم نزل الرصافة وقدم معه طاهر فامره بنزو-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ل الخيزرانية مع -اصحابه ثم---- تحول فنزل قصره علي شط-- دجلة وامر حميد بن عبد الحميد وعلي بن هشام وكل قاءد كان في عس-كر---ه ان ي--قيم في عسكره ------------فكانوا يختلفون الي دار المامون في كل يوم ولم يكن-------------------------------- يدخل عليه احد الا في الثياب الخضر ولبس ذلك اهل بغداد وبنو هاشم اجمعون فكانوا يخرقون كل شء يرونه من السواد علي انسان الا القل-نسوة فانه كان يلبسها الواحد بعد الواحد علي ---------خوف- ووجل- فاما قباء او علم فلم يكن احد يجترء ان يلبس شيءا من ذلك ولا يحمله فمكثوا بذلك ثمانية ايام فتكلم في ذلك بنو هاشم و--ولد العباس خاصة وقالوا له- يا امير المءمنين تركت لباس اباءك واهل بيتك ودولتهم ولبست الخضرة------ وكتب اليه في ذلك قواد اهل خراسان `;
 
-var inputA = `على ماء النيل، تمتد فتعم «1» المزارع من
+var inputA = `# وبها نخيل وثمار كثيرة، وزروعهم على ماء النيل، تمتد فتعم «1» المزارع من
 ~~حد أسوان إلى حد الاسكندرية وسائر الريف، فيقيم الماء من «2» عند ابتداء
 ~~الحر إلى ms051 الخريف، ثم ينصرف فيزرع ثم لا يسقى بعد ذلك، وأرض مصر لا تمطر ولا
 ~~تثلج،
@@ -38,7 +38,8 @@ var inputA = `على ماء النيل، تمتد فتعم «1» المزارع 
 # وأما النيل فإن ابتداء مائه لا يعلم، وذلك أنه يخرج من مفازة من وراء أرض
 ~~الزنج لا تسلك، حتى ينتهى إلى حد الزنج، ثم يقطع فى مفاوز وعمارات أرض
 ~~النوبة، فيجرى على عمارات متصلة إلى أن يقع فى أرض مصر،`
-var inputB = `بماء النيل من حد اسوان
+var inputB = `# (15)
+~~وبمصر نخيل كثيرة وبساتين وأجنة صالحة وتمتد زروعهم @ALIGN@B@56@ بماء النيل من حد اسوان
 ~~الى حد الإسكندرية والباطن ويقيم الماء فى أرضهم بالريف والحوف منذ امتداد
 ~~الحر الى الخريف «11» وينضب على ما @firstP@قدمت ذكره فيزرع ولا يحتاج الى سقى ولا
 ~~مطر من بعد ذلك، وأرض مصر لا تمطر ولا تثلج، وليس بأرض مصر مدينة ms124 يجرى فيها
@@ -53,15 +54,24 @@ var inputB = `بماء النيل من حد اسوان
 /*var inputA = "الي النهروان يوم السبت فاقام به ثمانية ايام"
 var inputB = "الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام"*/
 
-var calcDiffBtn, inputBtn, inputDiv, outputDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, punctCheck, punct,
-cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck,
-normalizeAlif, normalizeYa, normalizeHa;
+var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
+calcDiffBtn, inputBtn, optionsBtn, svgBtn, pngBtn, resetButton, optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, punctCheck, punct,
+cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
+normalizeAlif, normalizeYa, normalizeHa, singleDiv;
 
 window.addEventListener('load', function() {
-  inputDiv = calcDiffBtn = document.getElementById("inputDiv");
-  outputDiv = calcDiffBtn = document.getElementById("outputDiv");
+  inputIntro = document.getElementById("inputIntro");
+  outputIntro = document.getElementById("outputIntro");
+  inputDiv = document.getElementById("inputDiv");
+  outputDiv = document.getElementById("outputDiv");
+  outputSingleDiv = document.getElementById("outputSingleDiv");
+  inputButtons = document.getElementById("inputButtons");
+  outputButtons = document.getElementById("outputButtons");
+  optionButtons = document.getElementById("optionButtons");
+
   loadExampleLnk = document.getElementById("loadExample");
   loadExampleLnk.addEventListener("click", loadExample);
+
   resizeCont = document.getElementsByClassName("resize-container")[0];
   var resizer = document.createElement('div');
   resizer.className = 'resizer';
@@ -86,10 +96,34 @@ window.addEventListener('load', function() {
       calcDiff();
     }
   });*/
+
   calcDiffBtn = document.getElementById("calcDiffButton");
   calcDiffBtn.addEventListener("click", calcDiff);
+
   clearBtn = document.getElementById("clearButton");
   clearBtn.addEventListener("click", clear);
+
+  optionsDiv = document.getElementById("options");
+  optionsBtn = document.getElementById("optionsButton");
+  optionsBtn.addEventListener("click", function(){
+    if (optionsBtn.value === "Options"){
+      optionsDiv.style.display = "block";
+      optionsBtn.value = "Hide options";
+      optionButtons.style.display = "inline-block";
+    } else {
+      optionsDiv.style.display = "none";
+      optionsBtn.value = "Options";
+      optionButtons.style.display = "none";
+    }
+  });
+
+  svgBtn = document.getElementById("svgButton");
+  svgBtn.addEventListener("click", downloadSvg);
+  pngBtn = document.getElementById("pngButton");
+  pngBtn.addEventListener("click", downloadPng);
+
+  resetButton = document.getElementById("resetButton");
+  resetButton.addEventListener("click", resetOptions);
   rowsChk = document.getElementById("rowsCheck");
   rowsChk.addEventListener("change",  calcDiffIfVisible);
   fontSizeInp = document.getElementById("fontSizeInput");
@@ -105,16 +139,23 @@ window.addEventListener('load', function() {
   normalizeYaCheck.addEventListener("change",  calcDiffIfVisible);
   normalizeHaCheck = document.getElementById("normalizeHaCheck");
   normalizeHaCheck.addEventListener("change",  calcDiffIfVisible);
+  singleDivCheck = document.getElementById("singleDivCheck");
+  singleDivCheck.addEventListener("change",  calcDiffIfVisible);
+
   inputBtn =  document.getElementById("inputButton");
   inputBtn.addEventListener("click", function(){
     inputDiv.style.display="block";
+    inputIntro.style.display="block";
+    inputButtons.style.display="inline-block";
     outputDiv.style.display="none";
+    outputIntro.style.display="none";
+    outputButtons.style.display="none";
   });
 });
 
 window.addEventListener('resize', function(){
   if (outputDiv.style.display !== "none"){
-    calcDiff();
+    calcDiffIfVisible();
   }
 });
 
@@ -134,11 +175,25 @@ function clear(){
   document.getElementById("inputB").value = "";
 }
 
+function resetOptions(){
+  fontSizeInp.value = "16";
+  rowsCheck.checked = false;
+  arCharInp.value = "20";
+  cleanChk.checked = true;
+  punctCheck.checked = false;
+  normalizeAlifCheck.checked = true;
+  normalizeYaCheck.checked = true;
+  normalizeHaCheck.checked = true;
+  changeFontSize();
+  calcDiffIfVisible();
+}
+
 function clean(text){
   if (CLEAN) {
     text = text.replace(/\r/g, "");
     text = text.replace(/### \|+ /g, "");
     text = text.replace(/\n# /g, "\n");
+    text = text.replace(/^# /g, "\n");
     text = text.replace(/-+/g, "");
     text = text.replace(/\n+~~/g, " ");
     text = text.replace(/~~/g, "");
@@ -208,7 +263,7 @@ function Resize(e) {
 function stopResize(e) {
     window.removeEventListener('mousemove', Resize, false);
     window.removeEventListener('mouseup', stopResize, false);
-    calcDiff();
+    calcDiffIfVisible();
 }
 
 
@@ -230,25 +285,26 @@ function parseDiffHtml(diffHtml){
     console.log(c);
     if (c.nodeType === Node.TEXT_NODE){
       console.log("UNMARKED: COMMON TEXT "+c.textContent);
-      aHtml += c.textContent;
-      bHtml += c.textContent;
       if (ROWS && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
         displayDiff(aHtml, bHtml);
         aHtml = "";
         bHtml = "";
       }
+      aHtml += c.textContent;
+      bHtml += c.textContent;
+
     } else if (c.classList.contains("wikEdDiffInsert")) {
       console.log("MARK IN B (INSERTION)");
       bHtml += '<span class="added">'+c.textContent+'</span>';
-      if (c.querySelector(".wikEdDiffNewline") != null){
+      /*if (c.querySelector(".wikEdDiffNewline") != null){
         bHtml += "<br>"
-      }
+      }*/
     } else if (c.classList.contains("wikEdDiffDelete")) {
       console.log("MARK IN A (DELETION) "+c.textContent);
       aHtml += '<span class="removed">'+c.textContent+'</span>';
-      if (c.querySelector(".wikEdDiffNewline") != null){
+      /*if (c.querySelector(".wikEdDiffNewline") != null){
         aHtml += "<br>"
-      }
+      }*/
     } else if (c.classList.contains("wikEdDiffBlock")) {
       console.log("MOVED, B "+c.textContent);
       if (c.textContent.length > 1){
@@ -272,15 +328,24 @@ function parseDiffHtml(diffHtml){
       }
     }
   }
+
+  // display the difs:
   displayDiff(aHtml, bHtml);
-  //document.getElementById("aDiff").innerHTML = "<p>"+aHtml+"</p>";
-  //document.getElementById("bDiff").innerHTML = "<p>"+bHtml+"</p>";
   document.getElementById("cDiff").innerHTML = diffHtml;
+  if (singleDiv){
+    document.getElementById("cDiff").style.display = "block";
+  } else {
+    document.getElementById("cDiff").style.display = "none";
+  }
+
   console.log(aHtml);
   console.log(bHtml);
   outputDiv.style.display="block";
+  outputIntro.style.display="block";
+  outputButtons.style.display="inline-block";
   inputDiv.style.display="none";
-
+  inputIntro.style.display="none";
+  inputButtons.style.display="none";
   // create download link:
   /*
   // svg approach: does not work well (not whole table, no highlighting)
@@ -309,20 +374,43 @@ function parseDiffHtml(diffHtml){
   */
   // png download using dom-to-image (https://github.com/tsayen/dom-to-image):
   domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
-      let downloadLink = document.getElementById("pngDownloadLink");
+      /*let downloadLink = document.getElementById("pngDownloadLink");
       downloadLink.setAttribute('href', dataUrl);
-      downloadLink.setAttribute("download", "diff.png");
+      downloadLink.setAttribute("download", "diff.png");*/
       //console.log(dataUrl);
+      let dataUrlHidingPlace = document.getElementById("pngDataUrl");
+      dataUrlHidingPlace.innerHTML = dataUrl;
   });
   domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
-      let downloadLink = document.getElementById("svgDownloadLink");
+      /*let downloadLink = document.getElementById("svgDownloadLink");
       downloadLink.setAttribute('href', dataUrl);
-      downloadLink.setAttribute("download", "diff.svg");
+      downloadLink.setAttribute("download", "diff.svg");*/
       //console.log(dataUrl);
+      let dataUrlHidingPlace = document.getElementById("svgDataUrl");
+      dataUrlHidingPlace.innerHTML = dataUrl;
   });
 
 }
 
+function downloadSvg(){
+  let dataUrl = document.getElementById("svgDataUrl").innerHTML;
+  downloadFile(dataUrl, "diff.svg");
+}
+
+function downloadPng(){
+  let dataUrl = document.getElementById("pngDataUrl").innerHTML;
+  downloadFile(dataUrl, "diff.png");
+}
+
+function downloadFile(dataUrl, fn){
+  let link = document.createElement("a");
+  link.download = fn;
+  link.href = dataUrl;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  delete link;
+}
 
 function calcDiff() {
   // load variables from inputs:
@@ -334,6 +422,7 @@ function calcDiff() {
   normalizeAlif = normalizeAlifCheck.checked;
   normalizeHa = normalizeHaCheck.checked;
   normalizeYa = normalizeYaCheck.checked;
+  singleDiv = singleDivCheck.checked;
   ARCHARS = parseInt(arCharInp.value);
   if (a === ""){
     document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";

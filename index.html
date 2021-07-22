@@ -15,6 +15,15 @@
   body {
     font-family: 'Roboto', sans-serif;
   }
+  #outputIntro {
+    display: none;
+  }
+  #outputButtons {
+    display: none;
+  }
+  #optionButtons {
+    display: none;
+  }
   textarea {
     font-family: Courier;
     font-size: var(--ar-chars-font-size);
@@ -38,14 +47,24 @@
     background-color: PaleGoldenrod;
     border-radius: 3px;
   }
-
+  #options {
+    width: 95%;
+    background-color: darkgrey;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 4px;
+    display: none;
+  }
   #inputDiv {
     display: block;
+    width: 95%;
     height: 70%;
     margin-bottom: 10px;
+    margin-top: 10px;
+    margin-right: 0px;
   }
 
-  button {
+  input {
     font-family: 'Roboto', sans-serif;
     margin-top: 10px;
     margin-bottom: 10px;
@@ -54,14 +73,13 @@
   #outputDiv {
     display: none;
     position: relative;
-    height: 70%;
+    margin-bottom: 10px;
+    margin-top: 10px;
   }
   .resize-container {
     width: 95%;
-    height: 75%;
     position: relative;
     padding: 10px;
-    overflow-y: auto;
     border: solid 1px lightgrey;
   }
   .container {
@@ -91,6 +109,7 @@
   #cDiff {
     margin: 0 auto;
     display: none;
+    direction: rtl;
   }
   .num-input {
     width: 40px;
@@ -112,47 +131,46 @@
 <body>
 
 <h1>OpenITI Diff viewer</h1>
-<div id="inputDiv">
+
+<div id="inputIntro">
   <p>Paste the two strings you want to compare in the fields below (or <a id="loadExample" href="#">load an example</a>) and click the display button:</p>
-  <div>
-    <textarea id="inputA"></textarea>
-    <textarea id="inputB"></textarea>
-  </div>
-  <div>
-    <button type="button" id="calcDiffButton">Display diff</button>
-    <button type="button" id="clearButton">Clear</button>
-  </div>
 </div>
 
-<div id="outputDiv">
-  <div>
-    <p>
-      Color coding:
-      <span class="removed">only in text A</span>
-      <span> - </span>
-      <span class="added">only in text B</span>
-      <span> - </span>
-      <span class="moved">in text A and B but in different position</span>
-      <span> - </span>
-      (not highlighted: in texts A and B)
-    </p>
-  </div>
-  <div class="resize-container">
-    <div class="container">
-      <table id="outputTable"></table>
-    </div>
-  </div>
-  <div id="downloadDiv">
-    <span>Download diff (full-size) as <a id="svgDownloadLink">svg</a> or <a id="pngDownloadLink">png</a> file </span>
-    <button type="button" id="inputButton">Show input</button>
-  </div>
+<div id="outputIntro">
+  <p>
+    Color coding:
+    <span class="removed">only in text A</span>
+    <span> - </span>
+    <span class="added">only in text B</span>
+    <span> - </span>
+    <span class="moved">in text A and B but in different position</span>
+    <span> - </span>
+    (not highlighted: in texts A and B)
+  </p>
+  <p>Download diff (full-size) as <a id="svgDownloadLink">svg</a> or <a id="pngDownloadLink">png</a> file </p>
 </div>
-<div id="outputDivSingle">
-  <div id="cDiff"></div>
+
+<div id="buttons">
+  <span id="inputButtons">
+    <input type="button" id="calcDiffButton" value="Display diff">
+    <input type="button" id="clearButton" value="Clear">
+  </span>
+  <span id="outputButtons">
+    <input type="button" id="svgButton" value="Download svg">
+    <input type="button" id="pngButton" value="Download png">
+    <input type="button" id="inputButton" value="Show input">
+  </span>
+  <span>
+    <input type="button" name="optionsButton" id="optionsButton" value="Options">
+  </span>
+  <span id="optionButtons">
+    <input type="button" name="resetButton" id="resetButton" value="Reset options">
+  </span>
 </div>
-<div id="optionsDiv">
-  <h3>Options: </h3>
-  <div>
+
+<div id="options">
+  <p style="padding-top: 10px">Options:</p>
+  <div style="margin-left: 20px;">
     <label for="fontSizeInput">Font size: </label>
     <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="16">
     <label for="fontSizeInput">px</label>
@@ -171,15 +189,39 @@
     <label for="punctCheck">remove punctuation</label>
     <br>
     <label for="normalizeAlifs">Normalize: </label>
-    <input type="checkbox" id="normalizeAlifCheck" name="normalizeAlifCheck">
+    <input type="checkbox" id="normalizeAlifCheck" name="normalizeAlifCheck" checked>
     <label for="normalizeAlif">Alifs (أ = ا = إ = آ) </label>
-    <input type="checkbox" id="normalizeYaCheck" name="normalizeYaCheck">
+    <input type="checkbox" id="normalizeYaCheck" name="normalizeYaCheck" checked>
     <label for="normalizeFinalYa">alif maqṣūra / final yā' (ي = ى) </label>
-    <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck">
+    <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck" checked>
     <label for="normalizeFinalHa">tā marbūṭa / final hā' (ة = ه)</label>
+    <br>
+    <input type="checkbox" id="singleDivCheck" name="singleDivCheck">
+    <label for="singleDivCheck">Display the diff in a single composite text (wikipedia-style)</label>
   </div>
 </div>
 
+<div id="inputDiv">
+  <div>
+    <textarea id="inputA"></textarea>
+    <textarea id="inputB"></textarea>
+  </div>
+
+</div>
+
+<div id="outputDiv">
+  <div class="resize-container">
+    <div class="container">
+      <table id="outputTable"></table>
+    </div>
+  </div>
+</div>
+<div id="outputSingleDiv">
+  <div id="cDiff"></div>
+</div>
+
+<div id="svgDataUrl" style="display: none"></div>
+<div id="pngDataUrl" style="display: none"></div>
 
 
 </body>
