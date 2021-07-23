@@ -123,7 +123,7 @@
 <script src="js/openITI.js"></script>
 <script src="js/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js" integrity="sha512-01CJ9/g7e8cUmY0DFTMcUw/ikS799FHiOA0eyHsUWfOetgbx/t6oV4otQ5zXKQyIrQGTHSmRVPIgrgLcZi/WMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/index.js"></script>
+<script src="js/indexNew.js"></script>
 
 
 </head>
@@ -171,21 +171,10 @@
 <div id="options">
   <p style="padding-top: 10px">Options:</p>
   <div style="margin-left: 20px;">
-    <label for="fontSizeInput">Font size: </label>
-    <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="16">
-    <label for="fontSizeInput">px</label>
-    <br>
-    <input type="checkbox" id="rowsCheck" name="rowsCheck">
-    <label for="rowsCheck">
-      divide the output into lines of max.
-      <input type="text" class="num-input" id="arCharInput" name="arCharInput" value="20">
-      characters for easier reading
-    </label>
-    <br>
     <input type="checkbox" id="cleanCheck" name="cleanCheck" checked>
     <label for="cleanCheck">remove OpenITI tags from texts</label>
     <br>
-    <input type="checkbox" id="punctCheck" name="punctCheck">
+    <input type="checkbox" id="punctCheck" name="punctCheck" checked>
     <label for="punctCheck">remove punctuation</label>
     <br>
     <label for="normalizeAlifs">Normalize: </label>
@@ -195,6 +184,21 @@
     <label for="normalizeFinalYa">alif maqṣūra / final yā' (ي = ى) </label>
     <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck" checked>
     <label for="normalizeFinalHa">tā marbūṭa / final hā' (ة = ه)</label>
+    <br>
+    <label for="fontSizeInput">Font size: </label>
+    <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="16">
+    <label for="fontSizeInput">px</label>
+    <br>
+    <label for="ngramInput">Refine the results using shingled character</label>
+    <input type="text" class="num-input" id="ngramInput" name="ngramInput" value="3" checked>
+    <label for="ngramInput">-grams</label>
+    <br>
+    <input type="checkbox" id="rowsCheck" name="rowsCheck">
+    <label for="rowsCheck">
+      divide the output into lines of max.
+      <input type="text" class="num-input" id="arCharInput" name="arCharInput" value="20">
+      characters for easier reading
+    </label>
     <br>
     <input type="checkbox" id="singleDivCheck" name="singleDivCheck">
     <label for="singleDivCheck">Display the diff in a single composite text (wikipedia-style)</label>

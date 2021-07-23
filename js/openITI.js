@@ -98,13 +98,13 @@ var noise = [
 ];
 var arCharsStr = "";
 arChars.forEach(el => arCharsStr += el[0]);
-var arCharRegex = new RegExp("["+arCharsStr+"]", "g");
-var arTokRegex = new RegExp("["+arCharsStr+"]+", "g");
+var arCharRegex = new RegExp("(["+arCharsStr+"])", "g");
+var arTokRegex = new RegExp("(["+arCharsStr+"]+)", "g");
 
 var arCharsExtStr = arCharsStr;
 noise.forEach(el => arCharsExtStr += el[1]);
-var arCharExtRegex = new RegExp("["+arCharsExtStr+"]", "g");
-var arTokExtRegex = new RegExp("["+arCharsExtStr+"]+", "g");
+var arCharExtRegex = new RegExp("(["+arCharsExtStr+"])", "g");
+var arTokExtRegex = new RegExp("(["+arCharsExtStr+"]+)", "g");
 
 
 // tokenize a string using a regex that defines a token:
