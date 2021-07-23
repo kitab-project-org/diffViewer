@@ -56,10 +56,10 @@ var inputB = "الي النهروان وذلك يوم السبت فاقام في
 var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
 calcDiffBtn, inputBtn, optionsBtn, svgBtn, pngBtn, resetButton,
 optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, punctCheck, punct,
-ngramInput, refine_n, cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
+cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
 normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean;
 
-var VERBOSE = true;
+VERBOSE = false;
 
 // add event listeners to buttons etc.:
 
@@ -138,8 +138,6 @@ window.addEventListener('load', function() {
   normalizeYaCheck.addEventListener("change",  calcDiffIfVisible);
   normalizeHaCheck = document.getElementById("normalizeHaCheck");
   normalizeHaCheck.addEventListener("change",  calcDiffIfVisible);
-  ngramInput = document.getElementById("ngramInput");
-  ngramInput.addEventListener("change",  calcDiffIfVisible);
   singleDivCheck = document.getElementById("singleDivCheck");
   singleDivCheck.addEventListener("change",  calcDiffIfVisible);
 
@@ -164,9 +162,8 @@ window.addEventListener('resize', function(){
 
 //////////////////  Helper functions called by buttons ///////////////////////
 
-function calcDiffIfVisible(){
-  if (outputDiv.style.display === "block"){
-    console.log([outputDiv.style]);
+function calcDiffIfVisible (){
+  if (outputDiv.style.display !== "none"){
     calcDiff();
   }
 }
@@ -182,16 +179,14 @@ function clear(){
 }
 
 function resetOptions(){
+  fontSizeInp.value = "16";
+  rowsCheck.checked = false;
+  arCharInp.value = "20";
   cleanChk.checked = true;
-  punctCheck.checked = true;
+  punctCheck.checked = false;
   normalizeAlifCheck.checked = true;
   normalizeYaCheck.checked = true;
   normalizeHaCheck.checked = true;
-  fontSizeInp.value = "16";
-  ngramInput.value = "3";
-  rowsCheck.checked = false;
-  arCharInp.value = "20";
-  singleDivCheck.checked = false;
   changeFontSize();
   calcDiffIfVisible();
 }
@@ -273,7 +268,6 @@ function cleanText(text){
   if (punct) {
     text = text.replace(/[.?!:،,’]/g, "")
   }
-  text = text.replace(/^[\r\n ]+|[\r\n ]+$/g, '');
   return text
 }
 
@@ -297,229 +291,8 @@ function downloadFile(dataUrl, fn){
   delete link;
 }
 
-
-function shingle(s, n){
-  if (s.length<n) {
-    return [];
-  }
-  let shingles = [];
-  for (let i=0; i<(s.length+1)-n; i++){
-    shingles.push(s.substring(i,i+n));
-  }
-  return shingles;
-}
-
 //////////////////////// MAIN FUNCTIONS ///////////////////////////////////////
 
-function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
-  let inDel = false;
-  let usedChars = 0;
-  for (let i=0; i<O.length; i++){
-    var token = O[i];
-    //console.log(i + " token: "+[token]);
-    //console.log("usedChars: "+usedChars);
-    if (typeof OArr[i] === "string") { // no equivalent found in other string N
-      //console.log("= deletion: ")
-      if (! inDel) {
-        //console.log("not yet in del section");
-        if (i > n) {
-          aHtml += token.substring(usedChars, n-1) + '<span class="removed">' ;
-          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
-          usedChars = n-1;
-        } else {
-          aHtml += '<span class="removed">' ;
-        }
-        inDel = true;
-      }
-      if (usedChars == 0) {
-        //console.log("Adding first character of ngram to tagged deleted section");
-        aHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    } else {
-      //console.log(" = Common words");
-      let j = OArr[i];  // the index of the equivalent token in the other string
-      if (inDel) {
-        aHtml += '</span>' ;
-        inDel = false;
-      }
-      if (usedChars == 0) {
-        aHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    }
-  }
-  aHtml += token.substring(1+usedChars,n);
-  if (inDel) {
-    aHtml += '</span>'
-  }
-
-  let inAdd = false;
-  usedChars = 0;
-  for (let i=0; i<N.length; i++){
-    var token = N[i];
-    console.log(i + " token: "+[token]);
-    console.log("usedChars: "+usedChars);
-    if (typeof NArr[i] === "string") { // no equivalent found in other string N
-      if (! inAdd) {
-        console.log("not yet in del section");
-        if (i > n) {
-          bHtml += token.substring(usedChars, n-1) + '<span class="added">' ;
-          console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
-          usedChars = n-1;
-        } else {
-          bHtml += '<span class="added">' ;
-        }
-        inAdd = true;
-      }
-      if (usedChars == 0) {
-        bHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    } else {
-      console.log(" = Common words");
-      let j = NArr[i];  // the index of the equivalent token in the other string
-      if (inAdd) {
-        bHtml += '</span>' ;
-        inAdd = false;
-      }
-      if (usedChars == 0) {
-        bHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    }
-  }
-  bHtml += token.substring(1+usedChars,n);
-  if (inAdd) {
-    bHtml += '</span>'
-  }
-  return [aHtml, bHtml];
-}
-
-/*
- * Partial implementation of the algorithm described in Heckel 1978, pp. 265f.:
- * in this implementation a list of tokens (can be words, lines, ngrams, ...)
- * is provided for the old (O) and new (N) strings.
- * If lists shingled character ngrams are provided, provide the n of the ngram.
- * Moved clusters are not implemented here because they seem unnecessary for post-processing.
- *
- */
-
-function heckel(O, N){
-  var ST = new Object();  // symbol table
-  var OArr = new Array();   // array of Old string
-  var NArr = new Array();  // array of New string
-
-  // STEP1: count the number of times each token is in the new string N:
-  // populating the NArr array and the NC (new count) value in the symbol table ST:
-
-  for (let i=0; i<N.length; i++){
-    let token = N[i];
-    NArr.push(token);
-    if (!ST.hasOwnProperty(token)) {
-      ST[token] = {OC: 0, NC: 0, OLNO: null};
-    }
-    ST[token].NC += 1;
-  }
-
-  // STEP2:count the number of times each token is in the new string N:
-  // populating the OArr array and the OC (old count) and OLNO (old number)
-  // values in the symbol table ST:
-
-  for (let i=0; i<O.length; i++){
-    let token = O[i];
-    OArr.push(token);
-    if (!ST.hasOwnProperty(token)) {
-      ST[token] = {OC: 0, NC: 0, OLNO: null};
-    }
-    ST[token].OC += 1;
-    ST[token].OLNO = i;
-  }
-
-  // STEP3: identify tokens that are only once in both O and N;
-  // these will become the anchors for the rest of the Algorithm.
-  // In OArr and NArr, replace the selected tokens by their position in the other array
-
-  let maxVal = 1;
-  for (const token in ST) {
-    if (ST[token].OC === 1 && ST[token].NC === 1) {
-      OArr[OArr.indexOf(token)] = NArr.indexOf(token)
-      NArr[NArr.indexOf(token)] = ST[token].OLNO;
-    } else {
-      maxVal = Math.max(maxVal, ST[token].OC, ST[token].NC);
-    }
-  }
-
-  // Steps 4 and 5 only make sense if some tokens are present more than once!
-  if (maxVal > 1) {
-
-    // STEP 4: go through the NArr in ascending order and for those items that
-    // have been replaced with the index in the other array, check if the next
-    // item in both arrays is the same token (that is, an token that is present
-    // more than once in at least one of the strings).
-    // If so, replace both with the index of that item in the other array:
-
-    for (let i=0; i<NArr.length; i++) {
-      let token = NArr[i];
-      if (!ST.hasOwnProperty(token)) {
-        let j = OArr.indexOf(i);
-        // if a following item exists and is not a number, check if it is identical as the following token in OArr:
-        if (i+1<NArr.length && (ST.hasOwnProperty(NArr[i+1])) && j+1<OArr.length && (NArr[i+1] === OArr[j+1])) {
-          NArr[i+1] = j+1;
-          OArr[j+1] = i+1;
-         }
-      }
-    }
-
-    // STEP5: like step 4, but in descending order:
-
-    for (let i=NArr.length; i>=0; i--) {
-      let token = NArr[i];
-      if (!ST.hasOwnProperty(token)) {
-        let j = OArr.indexOf(i);
-        // if a preceding item exists and is not a number, check if it is identical as the preceding token in OArr:
-        if (i>0 && (ST.hasOwnProperty(NArr[i-1])) && j>0 && (NArr[i-1] === OArr[j-1])) {
-          NArr[i-1] = j-1;
-          OArr[j-1] = i-1;
-         }
-      }
-    }
-  }
-
-  // STEP6: piece the string back together, inserting html tags: in separate funtion.
-
-  return [OArr, NArr];
-}
-
-
-// refine the output of the algorithm by using shingled n-grams on
-// last added and deleted section
-function refine(O, N, aHtml, bHtml){
-  if (O.length < refine_n || N.length < refine_n) {
-    console.log("too short?");
-    console.log(O);
-    console.log(N);
-    aHtml += '<span class="removed">'+ O +'</span>';
-    bHtml += '<span class="added">'+ N +'</span>';
-  } else {
-    // go through the 6 steps of the algorithm in Heckel 1978, with shingled ngrams:
-    console.log("refining");
-    let Oshingles = shingle(O, refine_n);
-    let Nshingles = shingle(N, refine_n);
-    let [OArr, NArr] = heckel(Oshingles, Nshingles);
-    [aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
-  }
-  if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
-    displayDiff(aHtml, bHtml);
-    aHtml = "";
-    bHtml = "";
-  }
-  return [aHtml, bHtml];
-}
 
 // parse the wikiEdDiff html into two separate strings
 function parseDiffHtml(diffHtml){
@@ -532,63 +305,52 @@ function parseDiffHtml(diffHtml){
   if (VERBOSE) {console.log(rootNode);}
   var aHtml = "";
   var bHtml = "";
-  let pos = 0;
-  let pos_changes = {"Old" : "", "New" : ""};
 
   for (var i = 0; i < rootNode.childNodes.length; i++) {
     var c = rootNode.childNodes[i];
     if (VERBOSE) {console.log(c);}
     if (c.nodeType === Node.TEXT_NODE){
       if (VERBOSE) {console.log("UNMARKED: COMMON TEXT "+c.textContent);}
-      //if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
-        //displayDiff(aHtml, bHtml);
-      [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-      pos_changes = {"Old" : "", "New" : ""};
+      if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
+        displayDiff(aHtml, bHtml);
+        aHtml = "";
+        bHtml = "";
+      }
       aHtml += c.textContent;
       bHtml += c.textContent;
+
     } else if (c.classList.contains("wikEdDiffInsert")) {
       if (VERBOSE) {console.log("MARK IN B (INSERTION)");}
-      pos_changes["New"] += c.textContent;
-      //bHtml += '<span class="added">'+c.textContent+'</span>';
+      bHtml += '<span class="added">'+c.textContent+'</span>';
       /*if (c.querySelector(".wikEdDiffNewline") != null){
         bHtml += "<br>"
       }*/
     } else if (c.classList.contains("wikEdDiffDelete")) {
       if (VERBOSE) {console.log("MARK IN A (DELETION) "+c.textContent);}
-      pos_changes["Old"] += c.textContent;
-      //aHtml += '<span class="removed">'+c.textContent+'</span>';
+      aHtml += '<span class="removed">'+c.textContent+'</span>';
       /*if (c.querySelector(".wikEdDiffNewline") != null){
         aHtml += "<br>"
       }*/
     } else if (c.classList.contains("wikEdDiffBlock")) {
       if (VERBOSE) {console.log("MOVED, B "+c.textContent);}
       if (c.textContent.length > 1){
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-        pos_changes = {"Old" : "", "New" : ""};
         bHtml += '<span class="moved">'+c.textContent+'</span>';
       } else {
-        //bHtml += '<span class="added">'+c.textContent+'</span>';
-        pos_changes["New"] += c.textContent;
+        bHtml += '<span class="added">'+c.textContent+'</span>';
       }
     } else if (c.classList.contains("wikEdDiffMarkLeft")) {
       if (VERBOSE) {console.log("MOVED, A "+c.getAttribute('title'));}
       if (c.getAttribute('title').length > 1){
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-        pos_changes = {"Old" : "", "New" : ""};
         aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
       } else {
-        //aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
-        pos_changes["Old"] += c.getAttribute('title');
+        aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
       }
     } else if (c.classList.contains("wikEdDiffMarkRight")) {
       if (VERBOSE) {console.log("MOVED, A "+c.getAttribute('title'));}
       if (c.getAttribute('title').length > 1){
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-        pos_changes = {"Old" : "", "New" : ""};
         aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
       } else {
-        //aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
-        pos_changes["Old"] += c.getAttribute('title');
+        aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
       }
     }
   }
@@ -667,7 +429,6 @@ function calcDiff() {
   normalizeHa = normalizeHaCheck.checked;
   normalizeYa = normalizeYaCheck.checked;
   singleDiv = singleDivCheck.checked;
-  refine_n = parseInt(ngramInput.value);
   ARCHARS = parseInt(arCharInp.value);
   if (a === ""){
     document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
@@ -682,7 +443,6 @@ function calcDiff() {
 
   // clean both strings:
   a = cleanText(a);
-  console.log([a]);
   b = cleanText(b);
 
 
