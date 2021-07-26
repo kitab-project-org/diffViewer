@@ -116,7 +116,56 @@
     border: solid 1px lightgrey;
     direction: rtl;
   }
+  /* The Modal (background) */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
 
+  /* Modal Content */
+  .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+  }
+
+  /* The Close Button */
+  .close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  #selectRowsControls {
+    display: none;
+  }
+  #csvTable td:first-child {
+    width: 30px;
+  }
+  #csvTable td:nth-child(even){
+    width: 3%;
+  }
+  #pagination {
+    display: none;
+  }
 </style>
 
 <script src="js/wikiEdDiff.js"></script>
@@ -147,13 +196,13 @@
     <span> - </span>
     (not highlighted: in texts A and B)
   </p>
-  <p>Download diff (full-size) as <a id="svgDownloadLink">svg</a> or <a id="pngDownloadLink">png</a> file </p>
 </div>
 
 <div id="buttons">
   <span id="inputButtons">
     <input type="button" id="calcDiffButton" value="Display diff">
     <input type="button" id="clearButton" value="Clear">
+    <input type="button" id="uploadButton" value="Upload from file">
   </span>
   <span id="outputButtons">
     <input type="button" id="svgButton" value="Download svg">
@@ -222,6 +271,32 @@
 </div>
 <div id="outputSingleDiv">
   <div id="cDiff"></div>
+</div>
+<div id="pagination">
+  <input type="button" id="prevPage" value="Previous">
+  <label for="currentPageInput">Page </label>
+  <input type="text" class="num-input" id="currentPageInput" name="currentPageInput">
+  <label for="currentPageInput"> of </label>
+  <span id="lastPageSpan"></span>
+  <input type="button" id="nextPage" value="Next">
+</div>
+
+<div class="modal" id="uploadModal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Choose a passim alignment file (srt, csv) to display:</p>
+    <input type="file" name="inputfileButton" id="inputfileButton" accept=".csv, .tsv, .srt">
+    <div id="selectRowsControls">
+      <input type="button" id="loadSelectedRows" value="Load selected rows">
+      <input type="button" id="selectAllRows" value="Select all">
+      <input type="button" id="deselectAllRows" value="Deselect all">
+      <label for="rowFilter">Filter rows: only include rows containing: </label>
+      <input type="text" name="rowFilter" id="rowFilter" value="">
+    </div>
+    <div id="selectRows">
+      <table id="csvTable"></table>
+    </div>
+  </div>
 </div>
 
 <div id="svgDataUrl" style="display: none"></div>

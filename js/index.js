@@ -54,12 +54,16 @@ var inputB = "الي النهروان وذلك يوم السبت فاقام في
 // initialize global variables:
 
 var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
-calcDiffBtn, inputBtn, optionsBtn, svgBtn, pngBtn, resetButton,
+loadFromTextareaBtn, uploadBtn, inputBtn, optionsBtn, svgBtn, pngBtn, resetButton,
 optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, punctCheck, punct,
 ngramInput, refine_n, cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
-normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean;
+normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal, closeSpan, inputfileBtn, csvTable, rowFilterInp,
+csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
+nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan;
 
-var VERBOSE = true;
+var VERBOSE = false;
+var inputData = [];
+var currentPage = 0;
 
 // add event listeners to buttons etc.:
 
@@ -96,11 +100,33 @@ window.addEventListener('load', function() {
     resizer.style.color = "lightgrey";
   })
 
-  calcDiffBtn = document.getElementById("calcDiffButton");
-  calcDiffBtn.addEventListener("click", calcDiff);
+  loadFromTextareaBtn = document.getElementById("calcDiffButton");
+  loadFromTextareaBtn.addEventListener("click", loadFromTextArea);
+  uploadModal = document.getElementById("uploadModal");
+  uploadBtn = document.getElementById("uploadButton");
+  uploadBtn.addEventListener("click", function() {
+    uploadModal.style.display = "block";
+  });
+  closeSpan = document.getElementsByClassName("close")[0];
+  closeSpan.addEventListener("click", function() {
+    uploadModal.style.display = "none";
+  });
+  inputfileBtn = document.getElementById("inputfileButton");
+  inputfileBtn.addEventListener("change", loadCSV);
+  selectRowsControls = document.getElementById("selectRowsControls");
+  csvTable = document.getElementById("csvTable");
+  rowFilterInp = document.getElementById("rowFilter");
+  rowFilterInp.addEventListener("change", displayCSV);
+  selectAllRowsBtn = document.getElementById("selectAllRows");
+  selectAllRowsBtn.addEventListener("click", selectAllRows);
+  deselectAllRowsBtn = document.getElementById("deselectAllRows");
+  deselectAllRowsBtn.addEventListener("click", deselectAllRows);
+  loadSelectedRowsBtn = document.getElementById("loadSelectedRows");
+  loadSelectedRowsBtn.addEventListener("click", loadSelectedRows);
 
   clearBtn = document.getElementById("clearButton");
   clearBtn.addEventListener("click", clear);
+
 
   optionsDiv = document.getElementById("options");
   optionsBtn = document.getElementById("optionsButton");
@@ -152,6 +178,15 @@ window.addEventListener('load', function() {
     outputIntro.style.display="none";
     outputButtons.style.display="none";
   });
+
+  nextPageBtn = document.getElementById("nextPage");
+  nextPageBtn.addEventListener("click", nextPage);
+  prevPageBtn = document.getElementById("prevPage");
+  prevPageBtn.addEventListener("click", prevPage);
+  paginationDiv = document.getElementById("pagination");
+  currentPageInp = document.getElementById("currentPageInput");
+  currentPageInp.addEventListener("change", jumpToPage);
+  lastPageSpan = document.getElementById("lastPageSpan");
 });
 
 window.addEventListener('resize', function(){
@@ -164,9 +199,51 @@ window.addEventListener('resize', function(){
 
 //////////////////  Helper functions called by buttons ///////////////////////
 
+function prevPage(){
+  if (currentPage === 0){
+    currentPage = Math.ceil((inputData.length - 1)/2)-1;
+  } else {
+    currentPage--;
+  }
+  currentPageInp.value = currentPage+1;
+  calcDiff();
+}
+function nextPage(){
+  console.log("next page!")
+  if (currentPage+1 === Math.ceil((inputData.length - 1)/2)){
+    currentPage = 0;
+  } else {
+    currentPage++;
+  }
+  currentPageInp.value = currentPage+1;
+  calcDiff();
+}
+
+function jumpToPage(){
+  currentPage = parseInt(currentPageInp.value)-1;
+  calcDiff();
+}
+
+function loadFromTextArea(){
+  let a = document.getElementById("inputA").value;
+  let b = document.getElementById("inputB").value;
+  if (a === ""){
+    document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
+    return
+  } else if (b === ""){
+    document.getElementById("inputB").value = "PLEASE PROVIDE A TEXT HERE TOO";
+    return
+  } else if (a === b){
+    window.alert("Two identical texts provided!");
+    return
+  }
+  inputData = [[a, b], ];
+  calcDiff();
+  paginationDiv.style.display = "none";
+}
+
 function calcDiffIfVisible(){
   if (outputDiv.style.display === "block"){
-    console.log([outputDiv.style]);
     calcDiff();
   }
 }
@@ -179,6 +256,94 @@ function loadExample(){
 function clear(){
   document.getElementById("inputA").value = "";
   document.getElementById("inputB").value = "";
+}
+
+function parseCSV(r){
+  let csvArray = [];
+  r.split("\n").forEach(function(row){
+    let rowArray = [];
+    row.split(/[,\t]/g).forEach(function(cell){
+      rowArray.push(cell);
+    })
+    csvArray.push(rowArray);
+  })
+  return csvArray;
+}
+
+function displayCSV(){
+  var rowFilter = new RegExp(rowFilterInp.value, "g");
+  csvTable.innerHTML = "";
+
+  // create column headers:
+  var headerRow = document.createElement("tr");
+  let headerCell = document.createElement("th");
+  headerRow.appendChild(headerCell);
+  headerCell.textContent = "select";
+  relevCols.forEach(function(i){
+    let headerCell = document.createElement("th");
+    headerCell.textContent = csvHeader[i];
+    headerRow.appendChild(headerCell);
+  });
+  csvTable.appendChild(headerRow);
+
+  // create data rows:
+  csvArray.forEach(function(rowData){
+    var filterStr = ""
+    var row = document.createElement("tr");
+    let cell = document.createElement("td");
+    let inp = document.createElement("input");
+    // add selection checkbox:
+    inp.setAttribute("type", "checkbox");
+    inp.checked = true;
+    cell.appendChild(inp);
+    row.appendChild(cell);
+    // add relevant columns:
+    relevCols.forEach(function(i){
+      let cell = document.createElement("td");
+      cell.textContent = rowData[i];
+      filterStr += rowData[i] + "\n";
+      row.appendChild(cell);
+    });
+    if (rowFilter){
+      if (filterStr.match(rowFilter)){
+        csvTable.appendChild(row);
+      }
+    } else {
+      csvTable.appendChild(row);
+    }
+  });
+}
+
+function loadCSV() {
+  console.log("file received");
+  selectRowsControls.style.display="block";
+  var fn = this.value;
+  //fn = fn.replace(/.*[\/\\]/, ''); // remove the fake path before the filename
+  var fr=new FileReader();
+  fr.onload=function(){
+    console.log("file loaded");
+
+    csvArray = parseCSV(fr.result);
+    csvHeader = csvArray.shift();
+    //console.log(csvHeader);
+
+    relevCols = [0,0,0,0];
+    for (i in csvHeader){
+      if (csvHeader[i] == "id1"){
+        relevCols[0] = i;
+      } else if (csvHeader[i] == "s1"){
+        relevCols[1] = i;
+      } else if (csvHeader[i] == "id2"){
+        relevCols[2] = i;
+      } else if (csvHeader[i] == "s2"){
+        relevCols[3] = i;
+      }
+    }
+    //console.log(relevCols);
+    displayCSV();
+
+  }
+  fr.readAsText(this.files[0]);
 }
 
 function resetOptions(){
@@ -199,6 +364,7 @@ function resetOptions(){
 function changeFontSize(){
   let fs = parseInt(fontSizeInp.value);
   document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
+  calcDiffIfVisible();
 }
 
 // allow resizing the output container: code from https://jsfiddle.net/RainStudios/mw786v1w/
@@ -213,6 +379,43 @@ function stopResize(e) {
     window.removeEventListener('mousemove', Resize, false);
     window.removeEventListener('mouseup', stopResize, false);
     calcDiffIfVisible();
+}
+
+function selectAllRows(){
+  let inputs = csvTable.getElementsByTagName("input");
+  [...inputs].forEach(function(inp){
+    inp.checked = true;
+  });
+}
+
+function deselectAllRows(){
+  let inputs = csvTable.getElementsByTagName("input");
+  [...inputs].forEach(function(inp){
+    inp.checked = false;
+  });
+}
+
+function loadSelectedRows(){
+  inputData = [];
+  let rows = Array.from(csvTable.getElementsByTagName("tr"));
+  rows.shift(); // disregard the header
+  rows.forEach(function(row){
+    let inp = row.getElementsByTagName("input")[0];
+    if (inp.checked) {
+      a = row.getElementsByTagName("td")[1].textContent;
+      b = row.getElementsByTagName("td")[3].textContent;
+      inputData.push([a, b]);
+      a = row.getElementsByTagName("td")[2].textContent;
+      b = row.getElementsByTagName("td")[4].textContent;
+      inputData.push([a, b]);
+    }
+  });
+  currentPage = 0;
+  currentPageInp.value = 1;
+  lastPageSpan.textContent = inputData.length / 2;
+  calcDiff();
+  uploadModal.style.display = "none";
+  paginationDiv.style.display = "block";
 }
 
 
@@ -360,14 +563,14 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
   usedChars = 0;
   for (let i=0; i<N.length; i++){
     var token = N[i];
-    console.log(i + " token: "+[token]);
-    console.log("usedChars: "+usedChars);
+    //console.log(i + " token: "+[token]);
+    //console.log("usedChars: "+usedChars);
     if (typeof NArr[i] === "string") { // no equivalent found in other string N
       if (! inAdd) {
-        console.log("not yet in del section");
+        //console.log("not yet in del section");
         if (i > n) {
           bHtml += token.substring(usedChars, n-1) + '<span class="added">' ;
-          console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
+          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
           usedChars = n-1;
         } else {
           bHtml += '<span class="added">' ;
@@ -380,7 +583,7 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
         usedChars--;
       }
     } else {
-      console.log(" = Common words");
+      //console.log(" = Common words");
       let j = NArr[i];  // the index of the equivalent token in the other string
       if (inAdd) {
         bHtml += '</span>' ;
@@ -500,14 +703,14 @@ function heckel(O, N){
 // last added and deleted section
 function refine(O, N, aHtml, bHtml){
   if (O.length < refine_n || N.length < refine_n) {
-    console.log("too short?");
-    console.log(O);
-    console.log(N);
+    //console.log("too short?");
+    //console.log(O);
+    //console.log(N);
     aHtml += '<span class="removed">'+ O +'</span>';
     bHtml += '<span class="added">'+ N +'</span>';
   } else {
     // go through the 6 steps of the algorithm in Heckel 1978, with shingled ngrams:
-    console.log("refining");
+    //console.log("refining");
     let Oshingles = shingle(O, refine_n);
     let Nshingles = shingle(N, refine_n);
     let [OArr, NArr] = heckel(Oshingles, Nshingles);
@@ -524,7 +727,6 @@ function refine(O, N, aHtml, bHtml){
 // parse the wikiEdDiff html into two separate strings
 function parseDiffHtml(diffHtml){
   //document.getElementsByClassName("container")[0].innerHTML = "";
-  document.getElementById("outputTable").innerHTML = "";
   var parser = new DOMParser();
   var wikiHtml = parser.parseFromString(diffHtml, "text/html");
   if (VERBOSE) {console.log(wikiHtml);}
@@ -657,9 +859,10 @@ function parseDiffHtml(diffHtml){
 }
 
 function calcDiff() {
+  // empty the existing output table:
+  document.getElementById("outputTable").innerHTML = "";
+
   // load variables from inputs:
-  var a = document.getElementById("inputA").value;
-  var b = document.getElementById("inputB").value;
   intoRows = rowsChk.checked;
   clean = cleanChk.checked;
   punct = punctCheck.checked;
@@ -669,30 +872,32 @@ function calcDiff() {
   singleDiv = singleDivCheck.checked;
   refine_n = parseInt(ngramInput.value);
   ARCHARS = parseInt(arCharInp.value);
-  if (a === ""){
-    document.getElementById("inputA").value = "PLEASE PROVIDE A TEXT HERE";
-    return
-  } else if (b === ""){
-    document.getElementById("inputB").value = "PLEASE PROVIDE A TEXT HERE TOO";
-    return
-  } else if (a === b){
-    window.alert("Two identical texts provided!");
-    return
+
+  if (inputData.length === 1){
+    var toBeDisplayed = [["", ""], inputData[currentPage]];
+  } else {
+    var toBeDisplayed = [inputData[2*currentPage], inputData[(2*currentPage)+1]]
   }
+  for (let i in toBeDisplayed){
+    var a = toBeDisplayed[i][0];
+    var b = toBeDisplayed[i][1];
+    if (i%2 !== 0){
+      // clean both strings:
+      a = cleanText(a);
+      console.log(a);
+      b = cleanText(b);
 
-  // clean both strings:
-  a = cleanText(a);
-  console.log([a]);
-  b = cleanText(b);
-
-
-  // create the diff:
-  var wikEdDiff = new WikEdDiff();
-  // experiment with special regexes for Arabic words and characters:
-  wikEdDiff.config.regExp.split.word = arTokExtRegex;
-  wikEdDiff.config.regExp.countWords = arTokExtRegex;
-  //wikEdDiff.config.regExp.split.character = arCharExtRegex;
-  var diffHtml =  wikEdDiff.diff(a, b);
-  if (VERBOSE) {console.log(diffHtml);}
-  parseDiffHtml(diffHtml);
+      // create the diff:
+      var wikEdDiff = new WikEdDiff();
+      // experiment with special regexes for Arabic words and characters:
+      //wikEdDiff.config.regExp.split.word = arTokExtRegex;
+      //wikEdDiff.config.regExp.countWords = arTokExtRegex;
+      //wikEdDiff.config.regExp.split.character = arCharExtRegex;
+      var diffHtml =  wikEdDiff.diff(a, b);
+      if (VERBOSE) {console.log(diffHtml);}
+      parseDiffHtml(diffHtml);
+    } else { //
+      displayDiff(a, b);
+    }
+  }
 }
