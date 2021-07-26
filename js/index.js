@@ -279,11 +279,15 @@ function displayCSV(){
   let headerCell = document.createElement("th");
   headerRow.appendChild(headerCell);
   headerCell.textContent = "select";
-  relevCols.forEach(function(i){
+  for (let i=0; i<relevCols.length; i++){
+    let ind = relevCols[i];
     let headerCell = document.createElement("th");
-    headerCell.textContent = csvHeader[i];
+    headerCell.textContent = csvHeader[ind];
+    if (i%2 === 1){
+      headerCell.textContent = csvArray[0][relevCols[i-1]].replace(/-ara\d|-per\d|\.completed|\.mARkdown|\.ms\d+/g, "");
+    }
     headerRow.appendChild(headerCell);
-  });
+  }
   csvTable.appendChild(headerRow);
 
   // create data rows:
@@ -300,7 +304,7 @@ function displayCSV(){
     // add relevant columns:
     relevCols.forEach(function(i){
       let cell = document.createElement("td");
-      cell.textContent = rowData[i];
+      cell.textContent = rowData[i].replace(/.+ms/g, "ms");
       filterStr += rowData[i] + "\n";
       row.appendChild(cell);
     });
@@ -398,12 +402,14 @@ function deselectAllRows(){
 function loadSelectedRows(){
   inputData = [];
   let rows = Array.from(csvTable.getElementsByTagName("tr"));
-  rows.shift(); // disregard the header
+  let header = rows.shift(); // disregard the header
   rows.forEach(function(row){
     let inp = row.getElementsByTagName("input")[0];
     if (inp.checked) {
-      a = row.getElementsByTagName("td")[1].textContent;
-      b = row.getElementsByTagName("td")[3].textContent;
+      a = header.getElementsByTagName("th")[2].textContent;
+      a += "."+row.getElementsByTagName("td")[1].textContent;
+      b = header.getElementsByTagName("th")[4].textContent;
+      b += "."+row.getElementsByTagName("td")[3].textContent;
       inputData.push([a, b]);
       a = row.getElementsByTagName("td")[2].textContent;
       b = row.getElementsByTagName("td")[4].textContent;
