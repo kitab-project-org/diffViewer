@@ -264,9 +264,18 @@ function clear(){
 
 function parseCSV(r){
   let csvArray = [];
+  let tabs = r.match(/\t/g).length;
+  let commas = (r.match(/,/g) || []).length;
+  //console.log("tabs: "+tabs, "commas: "+commas);
+  if (tabs > commas){
+    var csvSeparator = new RegExp("\t", "g");
+  } else {
+    var csvSeparator = new RegExp(",", "g");
+  }
   r.trim().split("\n").forEach(function(row){
     let rowArray = [];
-    row.split(/[,\t]/g).forEach(function(cell){
+    //row.split(/[,\t]/g).forEach(function(cell){
+    row.split(csvSeparator).forEach(function(cell){
       rowArray.push(cell);
     })
     csvArray.push(rowArray);
@@ -295,8 +304,13 @@ function displayCSV(){
   }
   csvTable.appendChild(headerRow);
 
+  console.log("csvArray.length: "+csvArray.length);
+
   // create data rows:
-  csvArray.forEach(function(rowData){
+  //csvArray.forEach(function(rowData){
+  for (let rowno=0; rowno < csvArray.length; rowno++){
+    console.log(rowno);
+    rowData = csvArray[rowno];
     var filterStr = ""
     var row = document.createElement("tr");
     let cell = document.createElement("td");
@@ -307,14 +321,21 @@ function displayCSV(){
     cell.appendChild(inp);
     row.appendChild(cell);
     // add relevant columns:
-    relevCols.forEach(function(i){
+    //relevCols.forEach(function(i){
+    for (let i=0; i < relevCols.length; i++){
+      col_offset = relevCols[i];
       let cell = document.createElement("td");
-      let ms_id = rowData[i].replace(/.+ms|.+_/g, "ms");
-      ms_id = ms_id.replace(/(\d+)-\1/g, "$1");
-      cell.textContent = ms_id;
-      filterStr += rowData[i] + "\n";
+      if (i%2 == 0){
+        let ms_id = rowData[col_offset].replace(/.+ms|.+_/g, "ms");
+        ms_id = ms_id.replace(/(\d+)-\1/g, "$1");
+        cell.textContent = ms_id;
+      } else {
+        cell.textContent = rowData[col_offset].replace(/-+/g, "");
+      }
+      filterStr += cell.textContent + "\n";
       row.appendChild(cell);
-    });
+    //});
+    }
     if (rowFilter){
       if (filterStr.match(rowFilter)){
         csvTable.appendChild(row);
@@ -322,7 +343,10 @@ function displayCSV(){
     } else {
       csvTable.appendChild(row);
     }
-  });
+    //csvArray[rowno] = [];  // attempt to limit memory use
+  //});
+  }
+  console.log("Data loaded");
 }
 
 function loadCSV() {
