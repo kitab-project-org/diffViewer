@@ -59,7 +59,7 @@ optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, cl
 ngramInput, refine_n, cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
 normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal, closeSpan, inputfileBtn, csvTable, rowFilterInp,
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
-nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan;
+nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
 var VERBOSE = false;
 var inputData = [];
@@ -156,6 +156,7 @@ window.addEventListener('load', function() {
   arCharInp = document.getElementById("arCharInput");
   arCharInp.addEventListener("change",  calcDiffIfVisible);
   cleanChk = document.getElementById("cleanCheck");
+  cleanChk.addEventListener("change", calcDiffIfVisible);
   punctCheck = document.getElementById("punctCheck");
   punctCheck.addEventListener("change",  calcDiffIfVisible);
   normalizeAlifCheck = document.getElementById("normalizeAlifCheck");
@@ -187,6 +188,10 @@ window.addEventListener('load', function() {
   currentPageInp = document.getElementById("currentPageInput");
   currentPageInp.addEventListener("change", jumpToPage);
   lastPageSpan = document.getElementById("lastPageSpan");
+  downloadAllPngBtn = document.getElementById("downloadAllPngBtn");
+  downloadAllPngBtn.addEventListener("click", downloadAllPng);
+  downloadAllSvgBtn = document.getElementById("downloadAllSvgBtn");
+  downloadAllSvgBtn.addEventListener("click", downloadAllSvg);
 });
 
 window.addEventListener('resize', function(){
@@ -260,7 +265,7 @@ function clear(){
 
 function parseCSV(r){
   let csvArray = [];
-  r.split("\n").forEach(function(row){
+  r.trim().split("\n").forEach(function(row){
     let rowArray = [];
     row.split(/[,\t]/g).forEach(function(cell){
       rowArray.push(cell);
@@ -284,14 +289,19 @@ function displayCSV(){
     let headerCell = document.createElement("th");
     headerCell.textContent = csvHeader[ind];
     if (i%2 === 1){
-      headerCell.textContent = csvArray[0][relevCols[i-1]].replace(/-ara\d|-per\d|\.completed|\.mARkdown|\.ms\d+/g, "");
+      let headerText = csvArray[0][relevCols[i-1]].replace(/-ara\d|-per\d|\.completed|\.mARkdown|\.ms\d+|_.+/g, "");
+      headerCell.textContent = headerText;
     }
     headerRow.appendChild(headerCell);
   }
   csvTable.appendChild(headerRow);
 
   // create data rows:
+  var xxx = 0
+  console.log("number of rows: "+csvArray.length);
   csvArray.forEach(function(rowData){
+    xxx ++
+    console.log("row: "+xxx);
     var filterStr = ""
     var row = document.createElement("tr");
     let cell = document.createElement("td");
@@ -303,8 +313,11 @@ function displayCSV(){
     row.appendChild(cell);
     // add relevant columns:
     relevCols.forEach(function(i){
+      console.log("col:"+i);
       let cell = document.createElement("td");
-      cell.textContent = rowData[i].replace(/.+ms/g, "ms");
+      let ms_id = rowData[i].replace(/.+ms|.+_/g, "ms");
+      ms_id = ms_id.replace(/(\d+)-\1/g, "$1");
+      cell.textContent = ms_id;
       filterStr += rowData[i] + "\n";
       row.appendChild(cell);
     });
@@ -329,21 +342,27 @@ function loadCSV() {
 
     csvArray = parseCSV(fr.result);
     csvHeader = csvArray.shift();
-    //console.log(csvHeader);
+    console.log(csvHeader);
+    if (csvHeader.includes("idDoc1")){
+      var idColName = "idDoc";  // for aggregated data
+    } else {
+      var idColName = "id";     // for non-aggregated data
+    }
+    console.log("idColName: "+idColName);
 
     relevCols = [0,0,0,0];
     for (i in csvHeader){
-      if (csvHeader[i] == "id1"){
+      if (csvHeader[i] == idColName+"1"){
         relevCols[0] = i;
       } else if (csvHeader[i] == "s1"){
         relevCols[1] = i;
-      } else if (csvHeader[i] == "id2"){
+      } else if (csvHeader[i] == idColName+"2"){
         relevCols[2] = i;
       } else if (csvHeader[i] == "s2"){
         relevCols[3] = i;
       }
     }
-    //console.log(relevCols);
+    console.log(relevCols);
     displayCSV();
 
   }
@@ -362,7 +381,6 @@ function resetOptions(){
   arCharInp.value = "20";
   singleDivCheck.checked = false;
   changeFontSize();
-  calcDiffIfVisible();
 }
 
 function changeFontSize(){
@@ -450,9 +468,9 @@ function getLineOffsets(s){
 function displayDiff(aHtml, bHtml){
   let newRow = document.getElementById("outputTable").insertRow(-1);
   let cellA = newRow.insertCell(0);
-  cellA.innerHTML = aHtml;
+  cellA.innerHTML = aHtml.replace(/¶/g, "<br>");
   let cellB = newRow.insertCell(1);
-  cellB.innerHTML = bHtml;
+  cellB.innerHTML = bHtml.replace(/¶/g, "<br>");
   if (VERBOSE) {console.log("row inserted");}
 }
 
@@ -487,13 +505,61 @@ function cleanText(text){
 }
 
 function downloadSvg(){
-  let dataUrl = document.getElementById("svgDataUrl").innerHTML;
-  downloadFile(dataUrl, "diff.svg");
+  //let dataUrl = document.getElementById("svgDataUrl").innerHTML;
+  //downloadFile(dataUrl, "diff.svg");
+  domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
+      downloadFile(dataUrl, "diff.svg");
+  });
 }
 
 function downloadPng(){
-  let dataUrl = document.getElementById("pngDataUrl").innerHTML;
-  downloadFile(dataUrl, "diff.png");
+  //let dataUrl = document.getElementById("pngDataUrl").innerHTML;
+  //downloadFile(dataUrl, "diff.png");
+  domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
+    /*let downloadLink = document.getElementById("pngDownloadLink");
+    downloadLink.setAttribute('href', dataUrl);
+    downloadLink.setAttribute("download", "diff.png");*/
+    //console.log(dataUrl);
+    //let dataUrlHidingPlace = document.getElementById("pngDataUrl");
+    //dataUrlHidingPlace.innerHTML = dataUrl;
+    downloadFile(dataUrl, "diff.png");
+  });
+}
+
+async function downloadAll(fileType){
+  var lastPage = parseInt(lastPageSpan.textContent);
+  for (let i=0; i < lastPage; i++){
+    currentPage = i;
+    const r = await calcDiff();
+    if (fileType === "png"){
+      downloadPng();
+    } else if (fileType === "svg") {
+      downloadSvg();
+    }
+  }
+
+  /*(function(next){
+    for (let i=0; i < lastPage; i++){
+      currentPage = i;
+      console.log(currentPage);
+      calcDiff();
+      next();
+    }
+  }(function (){
+    if (fileType === "png"){
+      downloadPng();
+    } else if (fileType === "svg") {
+      downloadSvg();
+    }
+  }));*/
+}
+
+function downloadAllPng(){
+  downloadAll("png");
+}
+
+function downloadAllSvg(){
+  downloadAll("svg");
 }
 
 function downloadFile(dataUrl, fn){
@@ -613,7 +679,6 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
  * Partial implementation of the algorithm described in Heckel 1978, pp. 265f.:
  * in this implementation a list of tokens (can be words, lines, ngrams, ...)
  * is provided for the old (O) and new (N) strings.
- * If lists shingled character ngrams are provided, provide the n of the ngram.
  * Moved clusters are not implemented here because they seem unnecessary for post-processing.
  *
  */
@@ -756,14 +821,32 @@ function parseDiffHtml(diffHtml){
       bHtml += c.textContent;
     } else if (c.classList.contains("wikEdDiffInsert")) {
       if (VERBOSE) {console.log("MARK IN B (INSERTION)");}
-      pos_changes["New"] += c.textContent;
+      //pos_changes["New"] += c.textContent;
+      var children = Array.from(c.childNodes);
+      children.forEach(function(child){
+        if (child.classList && child.classList.contains("wikEdDiffNewline")){
+          pos_changes["New"] += "¶"  // "<br>";
+        } else {
+          pos_changes["New"] += child.textContent;
+        }
+      });
+
       //bHtml += '<span class="added">'+c.textContent+'</span>';
       /*if (c.querySelector(".wikEdDiffNewline") != null){
         bHtml += "<br>"
       }*/
     } else if (c.classList.contains("wikEdDiffDelete")) {
       if (VERBOSE) {console.log("MARK IN A (DELETION) "+c.textContent);}
-      pos_changes["Old"] += c.textContent;
+      //pos_changes["Old"] += c.textContent;
+      var children = Array.from(c.childNodes);
+      children.forEach(function(child){
+        if (child.classList && child.classList.contains("wikEdDiffNewline")){
+          pos_changes["Old"] += "¶"  // "<br>";
+        } else {
+          pos_changes["Old"] += child.textContent;
+        }
+      });
+
       //aHtml += '<span class="removed">'+c.textContent+'</span>';
       /*if (c.querySelector(".wikEdDiffNewline") != null){
         aHtml += "<br>"
@@ -845,26 +928,26 @@ function parseDiffHtml(diffHtml){
   });
   */
   // png download using dom-to-image (https://github.com/tsayen/dom-to-image):
-  domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
-      /*let downloadLink = document.getElementById("pngDownloadLink");
-      downloadLink.setAttribute('href', dataUrl);
-      downloadLink.setAttribute("download", "diff.png");*/
-      //console.log(dataUrl);
-      let dataUrlHidingPlace = document.getElementById("pngDataUrl");
-      dataUrlHidingPlace.innerHTML = dataUrl;
-  });
-  domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
-      /*let downloadLink = document.getElementById("svgDownloadLink");
-      downloadLink.setAttribute('href', dataUrl);
-      downloadLink.setAttribute("download", "diff.svg");*/
-      //console.log(dataUrl);
-      let dataUrlHidingPlace = document.getElementById("svgDataUrl");
-      dataUrlHidingPlace.innerHTML = dataUrl;
-  });
+  //domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
+  //    /*let downloadLink = document.getElementById("pngDownloadLink");
+  //    downloadLink.setAttribute('href', dataUrl);
+  //    downloadLink.setAttribute("download", "diff.png");*/
+  //    //console.log(dataUrl);
+  //    let dataUrlHidingPlace = document.getElementById("pngDataUrl");
+  //    dataUrlHidingPlace.innerHTML = dataUrl;
+  //});
+  //domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
+  //    /*let downloadLink = document.getElementById("svgDownloadLink");
+  //    downloadLink.setAttribute('href', dataUrl);
+  //    downloadLink.setAttribute("download", "diff.svg");*/
+  //    //console.log(dataUrl);
+  //    let dataUrlHidingPlace = document.getElementById("svgDataUrl");
+  //    dataUrlHidingPlace.innerHTML = dataUrl;
+  //});
 
 }
 
-function calcDiff() {
+async function calcDiff() {
   // empty the existing output table:
   document.getElementById("outputTable").innerHTML = "";
 
@@ -878,7 +961,7 @@ function calcDiff() {
   singleDiv = singleDivCheck.checked;
   refine_n = parseInt(ngramInput.value);
   ARCHARS = parseInt(arCharInp.value);
-
+  console.log("currentPage: "+currentPage);
   if (inputData.length === 1){
     var toBeDisplayed = [["", ""], inputData[currentPage]];
   } else {
