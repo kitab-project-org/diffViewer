@@ -62,7 +62,7 @@ highlighted in orange.
 
 ![color scheme](img/color_scheme_sample.svg)
 
-## options
+## Options
 
 Click the "Options" button to view the options:
 
@@ -89,7 +89,7 @@ before splitting the text (the default is 20).
 
 The options can be reset to their defaults by clicking the "Reset options" button.
 
-## resizing the output and downloading
+## Resizing the output and downloading image files
 
 You can resize the width of the output table by grabbing and dragging the
 right-side border of the table.
