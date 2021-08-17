@@ -61,7 +61,7 @@ normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
-var VERBOSE = true;
+var VERBOSE = false;
 var inputData = [];
 var currentPage = 0;
 
@@ -304,12 +304,9 @@ function displayCSV(){
   }
   csvTable.appendChild(headerRow);
 
-  console.log("csvArray.length: "+csvArray.length);
-
   // create data rows:
   //csvArray.forEach(function(rowData){
   for (let rowno=0; rowno < csvArray.length; rowno++){
-    console.log(rowno);
     rowData = csvArray[rowno];
     var filterStr = ""
     var row = document.createElement("tr");
@@ -346,7 +343,6 @@ function displayCSV(){
     //csvArray[rowno] = [];  // attempt to limit memory use
   //});
   }
-  console.log("Data loaded");
 }
 
 function loadCSV() {
@@ -378,7 +374,6 @@ function loadCSV() {
         relevCols[3] = i;
       }
     }
-    console.log(relevCols);
     displayCSV();
 
   }
