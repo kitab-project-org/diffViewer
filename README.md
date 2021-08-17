@@ -16,8 +16,11 @@ text that was moved from one place to another.
 The OpenITIdiffViewer modifies the output from the wikEd tool in two ways:
 
 * the wikEd tool displays the differences between two texts in one
-composite text rather than side-by-side. The OpenITI diff viewer analyses
-the output of the wikEd tool and displays the result side by side.
+  composite text rather than side-by-side.
+  ![wikEd: inline display](img/sample_text_wikEd.png)
+  The OpenITI diff viewer analyses the output of the wikEd tool and displays the
+  result side by side:
+  ![OpenITIdiffViewer: side-by-side display](img/sample_text_side_by_side.png)
 
 * the wikEd tool seems to have difficulties with Arabic's prefixes
 (for example, if text A has *wa-faʿala* and text B *fa-faʿala*, both words would be
