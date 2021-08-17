@@ -61,7 +61,7 @@ normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
-var VERBOSE = false;
+var VERBOSE = true;
 var inputData = [];
 var currentPage = 0;
 
@@ -214,7 +214,6 @@ function prevPage(){
   calcDiff();
 }
 function nextPage(){
-  console.log("next page!")
   if (currentPage+1 === Math.ceil((inputData.length - 1)/2)){
     currentPage = 0;
   } else {
@@ -297,11 +296,7 @@ function displayCSV(){
   csvTable.appendChild(headerRow);
 
   // create data rows:
-  var xxx = 0
-  console.log("number of rows: "+csvArray.length);
   csvArray.forEach(function(rowData){
-    xxx ++
-    console.log("row: "+xxx);
     var filterStr = ""
     var row = document.createElement("tr");
     let cell = document.createElement("td");
@@ -313,7 +308,6 @@ function displayCSV(){
     row.appendChild(cell);
     // add relevant columns:
     relevCols.forEach(function(i){
-      console.log("col:"+i);
       let cell = document.createElement("td");
       let ms_id = rowData[i].replace(/.+ms|.+_/g, "ms");
       ms_id = ms_id.replace(/(\d+)-\1/g, "$1");
@@ -342,13 +336,11 @@ function loadCSV() {
 
     csvArray = parseCSV(fr.result);
     csvHeader = csvArray.shift();
-    console.log(csvHeader);
     if (csvHeader.includes("idDoc1")){
       var idColName = "idDoc";  // for aggregated data
     } else {
       var idColName = "id";     // for non-aggregated data
     }
-    console.log("idColName: "+idColName);
 
     relevCols = [0,0,0,0];
     for (i in csvHeader){
@@ -883,6 +875,9 @@ function parseDiffHtml(diffHtml){
       }
     }
   }
+  console.log("pos_changes at end:");
+  console.log(pos_changes);
+  [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
 
   // display the difs:
   displayDiff(aHtml, bHtml);
