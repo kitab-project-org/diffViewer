@@ -52,6 +52,16 @@ a tsv file from your own computer.
   - Once you have selected the rows you are interested in, click the
   "Load selected rows" button to display the diff for each row.
 
+## Color scheme
+
+Text that is common between both input texts is displayed without highlighting;
+text that is unique to the left-hand text ("text A") is highlighted in blue,
+text that is unique to the right-hand text ("text B") is highlighted in green,
+while text that is common to both texts but appears in a different place is
+highlighted in orange.
+
+![color scheme](img/color_scheme_sample.svg)
+
 ## options
 
 Click the "Options" button to view the options:
