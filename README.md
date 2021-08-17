@@ -104,3 +104,10 @@ the "Download png" and "Download svg" buttons.
 If you uploaded multiple text pairs using the tsv upload function, you can
 download png or svg images for all files at once using the "Download all as png"
 and "Download all as svg" buttons.
+
+## TO DO:
+
+* the output should be further refined (in the color scheme example above,
+  for example, *wa-qawm* and *wa-qawmuhu* are highlighted as entirely different
+  while there is only one letter different)
+* an option to keep line breaks should be included
