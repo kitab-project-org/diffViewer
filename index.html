@@ -7,10 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --ar-chars-font-size: 16px;
+    --ar-chars-font-size: 20px;
   }
   body {
     font-family: 'Roboto', sans-serif;
@@ -25,7 +28,7 @@
     display: none;
   }
   textarea {
-    font-family: Courier;
+    font-family: "Amiri", sans-serif;
     font-size: var(--ar-chars-font-size);
     direction: rtl;
     border: 1px solid lightgrey;
@@ -87,7 +90,7 @@
   table {
     padding-right: 10px;
     padding-left: 10px;
-    font-family: Courier;
+    font-family: "Amiri", sans-serif;
     font-size: var(--ar-chars-font-size);
     border-collapse: collapse;
   }
@@ -206,9 +209,9 @@
     <input type="button" id="uploadButton" value="Upload from file">
   </span>
   <span id="outputButtons">
+    <input type="button" id="inputButton" value="Show input">
     <input type="button" id="svgButton" value="Download svg">
     <input type="button" id="pngButton" value="Download png">
-    <input type="button" id="inputButton" value="Show input">
   </span>
   <span>
     <input type="button" name="optionsButton" id="optionsButton" value="Options">
@@ -236,7 +239,7 @@
     <label for="normalizeFinalHa">tā marbūṭa / final hā' (ة = ه)</label>
     <br>
     <label for="fontSizeInput">Font size: </label>
-    <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="16">
+    <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="20">
     <label for="fontSizeInput">px</label>
     <br>
     <label for="ngramInput">Refine the results using shingled character</label>
@@ -269,10 +272,11 @@
       <table id="outputTable"></table>
     </div>
   </div>
+  <div id="outputSingleDiv">
+    <div id="cDiff"></div>
+  </div>
 </div>
-<div id="outputSingleDiv">
-  <div id="cDiff"></div>
-</div>
+
 <div id="pagination">
   <input type="button" id="prevPage" value="Previous">
   <label for="currentPageInput">Page </label>
@@ -280,6 +284,8 @@
   <label for="currentPageInput"> of </label>
   <span id="lastPageSpan"></span>
   <input type="button" id="nextPage" value="Next">
+  <input type="button" id="downloadAllPngBtn" value="Download all as png">
+  <input type="button" id="downloadAllSvgBtn" value="Download all as svg">
 </div>
 
 <div class="modal" id="uploadModal">
