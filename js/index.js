@@ -48,6 +48,9 @@ var inputB = `# (15)
 ~~أنه يخرج من مفاوز وراء أرض الزنج لا تسلك حتى ينتهى الى حد الزنج ويقطع فى
 ~~مفاوز النوبة وعماراتهم فيجرى لهم فى عمارات متصلة الى أن يقع فى أرض مصر،`
 
+//var inputA = `يقال ان يوسف النبي عليه السلام اتخذ لهم مجري يدوم لهم فيه الماء وقوم بحجاره وسماء اللاهون`
+//var inputB = `ويقال ان يوسف النبي عليه السلام اتخذ لهم مجري وزنه ليدوم لهم دخول الماء فيه وقومه بالحجاره المنضده وسماه اللاهونن`
+
 /*var inputA = "الي النهروان يوم السبت فاقام به ثمانية ايام"
 var inputB = "الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام"*/
 
@@ -61,7 +64,7 @@ normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
-var VERBOSE = false;
+var VERBOSE = true;
 var inputData = [];
 var currentPage = 0;
 
@@ -691,7 +694,6 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
  * in this implementation a list of tokens (can be words, lines, ngrams, ...)
  * is provided for the old (O) and new (N) strings.
  * Moved clusters are not implemented here because they seem unnecessary for post-processing.
- *
  */
 
 function heckel(O, N){
@@ -711,8 +713,9 @@ function heckel(O, N){
     ST[token].NC += 1;
   }
 
-  // STEP2:count the number of times each token is in the new string N:
-  // populating the OArr array and the OC (old count) and OLNO (old number)
+  // STEP2:count the number of times each token is in the old string O:
+  // populating the OArr array and the OC (old count) and OLNO
+  // (old number: offset of the token in the old string)
   // values in the symbol table ST:
 
   for (let i=0; i<O.length; i++){
@@ -726,7 +729,7 @@ function heckel(O, N){
   }
 
   // STEP3: identify tokens that are only once in both O and N;
-  // these will become the anchors for the rest of the Algorithm.
+  // these will become the anchors for the rest of the algorithm.
   // In OArr and NArr, replace the selected tokens by their position in the other array
 
   let maxVal = 1;
@@ -735,6 +738,7 @@ function heckel(O, N){
       OArr[OArr.indexOf(token)] = NArr.indexOf(token)
       NArr[NArr.indexOf(token)] = ST[token].OLNO;
     } else {
+      // check how many times the most repeated token is in either of the strings:
       maxVal = Math.max(maxVal, ST[token].OC, ST[token].NC);
     }
   }
@@ -744,13 +748,14 @@ function heckel(O, N){
 
     // STEP 4: go through the NArr in ascending order and for those items that
     // have been replaced with the index in the other array, check if the next
-    // item in both arrays is the same token (that is, an token that is present
+    // item in both arrays is the same token (that is, a token that is present
     // more than once in at least one of the strings).
     // If so, replace both with the index of that item in the other array:
 
     for (let i=0; i<NArr.length; i++) {
       let token = NArr[i];
       if (!ST.hasOwnProperty(token)) {
+      //if (ST.hasOwnProperty(token)) {
         let j = OArr.indexOf(i);
         // if a following item exists and is not a number, check if it is identical as the following token in OArr:
         if (i+1<NArr.length && (ST.hasOwnProperty(NArr[i+1])) && j+1<OArr.length && (NArr[i+1] === OArr[j+1])) {
@@ -765,6 +770,7 @@ function heckel(O, N){
     for (let i=NArr.length; i>=0; i--) {
       let token = NArr[i];
       if (!ST.hasOwnProperty(token)) {
+      //if (ST.hasOwnProperty(token)) {
         let j = OArr.indexOf(i);
         // if a preceding item exists and is not a number, check if it is identical as the preceding token in OArr:
         if (i>0 && (ST.hasOwnProperty(NArr[i-1])) && j>0 && (NArr[i-1] === OArr[j-1])) {
@@ -784,17 +790,19 @@ function heckel(O, N){
 // refine the output of the algorithm by using shingled n-grams on
 // last added and deleted section
 function refine(O, N, aHtml, bHtml){
+  console.log("O: '"+O+"'");
+  console.log("N: '"+N+"'");
   if (O.length < refine_n || N.length < refine_n) {
-    //console.log("too short?");
-    //console.log(O);
-    //console.log(N);
+    console.log("too short?");
     aHtml += '<span class="removed">'+ O +'</span>';
     bHtml += '<span class="added">'+ N +'</span>';
   } else {
     // go through the 6 steps of the algorithm in Heckel 1978, with shingled ngrams:
-    //console.log("refining");
+    console.log("refining");
     let Oshingles = shingle(O, refine_n);
     let Nshingles = shingle(N, refine_n);
+    //console.log("N: "+N);
+    //console.log("N shingled: "+Nshingles);
     let [OArr, NArr] = heckel(Oshingles, Nshingles);
     [aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
   }
@@ -865,8 +873,8 @@ function parseDiffHtml(diffHtml){
     } else if (c.classList.contains("wikEdDiffBlock")) {
       if (VERBOSE) {console.log("MOVED, B "+c.textContent);}
       if (c.textContent.length > 1){
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-        pos_changes = {"Old" : "", "New" : ""};
+        //[aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
+        //pos_changes = {"Old" : "", "New" : ""};
         bHtml += '<span class="moved">'+c.textContent+'</span>';
       } else {
         //bHtml += '<span class="added">'+c.textContent+'</span>';

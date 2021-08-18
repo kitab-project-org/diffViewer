@@ -110,3 +110,4 @@ and "Download all as svg" buttons.
 * the output should be further refined (in the color scheme example above,
   for example, *wa-qawm* and *wa-qawmuhu* are highlighted as entirely different
   while there is only one letter different)
+* do not split words in multi-line modus
