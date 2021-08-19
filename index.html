@@ -91,8 +91,8 @@
   table {
     padding-right: 10px;
     padding-left: 10px;
-    /*font-family: "Courier", monospace;*/
-    font-family: "Amiri", sans-serif;
+    font-family: "Courier", monospace;
+    /*font-family: "Amiri", sans-serif;*/
     font-size: var(--ar-chars-font-size);
     border-collapse: collapse;
   }
@@ -112,9 +112,25 @@
     bottom: 0;
   }
   #cDiff {
-    margin: 0 auto;
+    font-size: var(--ar-chars-font-size);
+    font-family: "Amiri", sans-serif;
+    //margin: 0 auto;
+    margin-top: 10;
     display: none;
     direction: rtl;
+  }
+  /*.wikEdDiffFragment, .wikEdDiffDelete, .wikEdDiffInsert, .wikEdDiffBlock, .wikEdDiffContainer {
+    font-size: var(--ar-chars-font-size);
+    font-family: "Amiri", sans-serif !important;
+  }*/
+  .wikEdDiffInsert{
+    background-color: lightgreen !important;
+  }
+  .wikEdDiffDelete {
+    background-color: lightblue !important;
+  }
+  .wikEdDiffBlock, .wikEdDiffMarkLeft, .wikEdDiffMarkRight {
+    background-color: PaleGoldenrod !important;
   }
   .num-input {
     width: 40px;
@@ -275,6 +291,7 @@
     </div>
   </div>
   <div id="outputSingleDiv">
+    <p>Original inline wikEdDiff output:</p>
     <div id="cDiff"></div>
   </div>
 </div>
