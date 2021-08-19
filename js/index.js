@@ -64,7 +64,7 @@ normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
-var VERBOSE = true;
+var VERBOSE = false;
 var inputData = [];
 var currentPage = 0;
 
@@ -789,16 +789,18 @@ function heckel(O, N){
 
 // refine the output of the algorithm by using shingled n-grams on
 // last added and deleted section
-function refine(O, N, aHtml, bHtml){
-  console.log("O: '"+O+"'");
-  console.log("N: '"+N+"'");
+function refine(O, N, aHtml, bHtml, nextChars){
+  //console.log("O: '"+O+"'");
+  //console.log("N: '"+N+"'");
+
+
   if (O.length < refine_n || N.length < refine_n) {
-    console.log("too short?");
+    //console.log("too short?");
     aHtml += '<span class="removed">'+ O +'</span>';
     bHtml += '<span class="added">'+ N +'</span>';
   } else {
     // go through the 6 steps of the algorithm in Heckel 1978, with shingled ngrams:
-    console.log("refining");
+    //console.log("refining");
     let Oshingles = shingle(O, refine_n);
     let Nshingles = shingle(N, refine_n);
     //console.log("N: "+N);
@@ -806,7 +808,30 @@ function refine(O, N, aHtml, bHtml){
     let [OArr, NArr] = heckel(Oshingles, Nshingles);
     [aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
   }
-  if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
+  //console.log("aHtml.substring(aHtml.length-5, aHtml.length-1): "+aHtml.substring(aHtml.length-5, aHtml.length-1));
+
+  var aHtmlStripped = aHtml.replace(/<[^>]+>/g, "");
+  var bHtmlStripped = bHtml.replace(/<[^>]+>/g, "");
+  //console.log("aHtml: "+aHtml);
+  //console.log("aHtmlStripped: "+aHtmlStripped);
+  var aLastChar = aHtmlStripped.substring(aHtmlStripped.length-1);
+  var bLastChar = bHtmlStripped.substring(bHtmlStripped.length-1);
+  var aLastChars = aHtmlStripped.substring(aHtmlStripped.length-5);
+  var bLastChars = bHtmlStripped.substring(bHtmlStripped.length-5);
+
+  /*console.log("aLastChar: '"+aLastChar+"'; bLastChar: '"+bLastChar+"'");
+  console.log("aLastChars: '"+aLastChars+"'; bLastChars: '"+bLastChars+"'");
+  console.log("nextChar: '"+nextChars[0]+"'");
+  console.log("more than ARCHARS: "+(charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS));
+  console.log('nextChars[0] === " ": '+(nextChars && nextChars[0] === " "));
+  console.log('aLastChar === " ": '+(aLastChar === " "));
+  console.log('bLastChar === " ": '+(bLastChar === " "));*/
+
+  if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS)
+      //&& aHtml.substring(aHtml.length-2, aHtml.length-1) != " "
+      //&& bHtml.substring(bHtml.length-2, bHtml.length-1) != " "
+      && ((nextChars && nextChars[0] === " ") || (aLastChar === " " && bLastChar === " " ))){
+    //console.log("=>NEW ROW!");
     displayDiff(aHtml, bHtml);
     aHtml = "";
     bHtml = "";
@@ -829,12 +854,14 @@ function parseDiffHtml(diffHtml){
 
   for (var i = 0; i < rootNode.childNodes.length; i++) {
     var c = rootNode.childNodes[i];
+
     if (VERBOSE) {console.log(c);}
     if (c.nodeType === Node.TEXT_NODE){
       if (VERBOSE) {console.log("UNMARKED: COMMON TEXT "+c.textContent);}
       //if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
         //displayDiff(aHtml, bHtml);
-      [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
+
+      [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
       pos_changes = {"Old" : "", "New" : ""};
       aHtml += c.textContent;
       bHtml += c.textContent;
@@ -883,8 +910,8 @@ function parseDiffHtml(diffHtml){
     } else if (c.classList.contains("wikEdDiffMarkLeft")) {
       if (VERBOSE) {console.log("MOVED, A "+c.getAttribute('title'));}
       if (c.getAttribute('title').length > 1){
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-        pos_changes = {"Old" : "", "New" : ""};
+        //[aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, nextChars);
+        //pos_changes = {"Old" : "", "New" : ""};
         aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
       } else {
         //aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
@@ -893,8 +920,8 @@ function parseDiffHtml(diffHtml){
     } else if (c.classList.contains("wikEdDiffMarkRight")) {
       if (VERBOSE) {console.log("MOVED, A "+c.getAttribute('title'));}
       if (c.getAttribute('title').length > 1){
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-        pos_changes = {"Old" : "", "New" : ""};
+        //[aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, nextChars);
+        //pos_changes = {"Old" : "", "New" : ""};
         aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
       } else {
         //aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
@@ -902,16 +929,18 @@ function parseDiffHtml(diffHtml){
       }
     }
   }
-  console.log("pos_changes at end:");
-  console.log(pos_changes);
-  [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
+  //console.log("pos_changes at end:");
+  //console.log(pos_changes);
+  [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, " ");
 
   // display the difs:
   displayDiff(aHtml, bHtml);
   document.getElementById("cDiff").innerHTML = diffHtml;
   if (singleDiv){
+    document.getElementById("outputSingleDiv").style.display = "block";
     document.getElementById("cDiff").style.display = "block";
   } else {
+    document.getElementById("outputSingleDiv").style.display = "none";
     document.getElementById("cDiff").style.display = "none";
   }
 
@@ -983,7 +1012,7 @@ async function calcDiff() {
   singleDiv = singleDivCheck.checked;
   refine_n = parseInt(ngramInput.value);
   ARCHARS = parseInt(arCharInp.value);
-  console.log("currentPage: "+currentPage);
+  //console.log("currentPage: "+currentPage);
   if (inputData.length === 1){
     var toBeDisplayed = [["", ""], inputData[currentPage]];
   } else {
@@ -995,7 +1024,7 @@ async function calcDiff() {
     if (i%2 !== 0){
       // clean both strings:
       a = cleanText(a);
-      console.log(a);
+      //console.log(a);
       b = cleanText(b);
 
       // create the diff:
