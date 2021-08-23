@@ -519,13 +519,13 @@ function cleanText(text){
 }
 
 function downloadSvg(){
-  domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
+  domtoimage.toSvg(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
     downloadFile(dataUrl, "diff.svg");
   });
 }
 
 function downloadPng(){
-  domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
+  domtoimage.toPng(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
     downloadFile(dataUrl, "diff.png");
   });
 }
