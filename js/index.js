@@ -522,20 +522,82 @@ function downloadSvg(){
   //let dataUrl = document.getElementById("svgDataUrl").innerHTML;
   //downloadFile(dataUrl, "diff.svg");
   domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
-      downloadFile(dataUrl, "diff.svg");
+    // add zero-width joiners to make sure connecting letters connect:
+    //dataUrl = dataUrl.replace(/(?<![> ٱدذرزاأإآوژةة])(<\/?span[^>]*>)(?=[ء-يٮ-ٳژکگی])/g, "%E2%80%8D$1%E2%80%8D");
+    downloadFile(dataUrl, "diff.svg");
   });
 }
 
 function downloadPng(){
   //let dataUrl = document.getElementById("pngDataUrl").innerHTML;
   //downloadFile(dataUrl, "diff.png");
+  /*var util = domtoimage.impl.util;
+  domtoimage.toSvg(document.getElementById("outputTable"))
+    .then(dataUrl => {
+      // add zero-width joiners:
+      dataUrl = dataUrl.replace(/(?<![> دذرزاأإآوژةٱة])(<\/?span[^>]*>)(?=[ء-يٮ-ٳژکگی])/g, "&#8205;$1&#8205;");
+      console.log(dataUrl.substring(0,500));
+      return dataUrl;
+    })
+    .then(util.makeImage)
+    .then(util.delay(100))
+    .then(function (image) {
+        console.log("creating image");
+        var canvas = newCanvas(domNode);
+        canvas.getContext('2d').drawImage(image, 0, 0);
+        return canvas;
+    })
+    .then(function (canvas) {
+      console.log("creating dataURL");
+      return canvas.toDataURL();
+    })
+    .then(pngUrl => {
+      console.log("sending url to downloadFile function");
+      downloadFile(pngUrl, "diff.png");
+    });
+
+  function newCanvas(domNode) {
+      var canvas = document.createElement('canvas');
+      canvas.width = options.width || util.width(domNode);
+      canvas.height = options.height || util.height(domNode);
+
+      if (options.bgcolor) {
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = options.bgcolor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      return canvas;
+  }*/
+
+    /*
+    // convert svg to png: see https://stackoverflow.com/a/58142441/4045481
+    svgStr = dataUrl.replace("data:image/svg+xml;charset=utf-8,", "");
+
+    const canvas = document.getElementById('myCanvas');
+    const wh = svgStr.match(/<svg[^>]*width="(\d+)" height="(\d+)">/);
+    canvas.width = parseInt(wh[1]);
+    canvas.height = parseInt(wh[2]);
+    ctx = canvas.getContext("2d");
+    var DOMURL = window.URL || window.webkitURL || window;
+    var img = new Image();
+    var svg = new Blob([svgStr], {type: "image/svg+xml;charset=utf-8"});
+    var url = DOMURL.createObjectURL(svg);
+    img.onload = function(){
+      console.log("image loaded");
+      //ctx.drawImage(img, 0, 0);
+      //const pngUrl = canvas.toDataURL('image/png');
+      const pngUrl = canvas.getContext('2d').drawImage(img, 0, 0).then(function (canvas){
+        return canvas.toDataURL;
+      });
+      console.log(pngUrl);
+      downloadFile(pngUrl, "diff.png");
+      DOMURL.revokeObjectURL(url);
+    }
+    img.src=url;
+
+  });*/
   domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
-    /*let downloadLink = document.getElementById("pngDownloadLink");
-    downloadLink.setAttribute('href', dataUrl);
-    downloadLink.setAttribute("download", "diff.png");*/
-    //console.log(dataUrl);
-    //let dataUrlHidingPlace = document.getElementById("pngDataUrl");
-    //dataUrlHidingPlace.innerHTML = dataUrl;
     downloadFile(dataUrl, "diff.png");
   });
 }
