@@ -342,7 +342,7 @@
             })
             .then(function (svg) {
                 // add U+200D ZERO WIDTH JOINER for Arabic-script letter connections that would be broken by a HTML tag:
-                svg = svg.replace(/(?<=[چپبتثجحخسشصضطظعغفقكلمنهيی][ًٌٍَُِّّْ]*)((?:<[^>]+>)+)(?=[ء-يٮ-ٳژکگی])/g, "%E2%80%8D$1%E2%80%8D");
+                svg = svg.replace(/(?<=[بتثپجحخچسشصضطظعغفقكکگلمنهيیی][ًٌٍَُِّّْ]*)((?:<[^>]+>)+)(?=[ء-يٮ-ٳژکگی])/g, "%E2%80%8D$1%E2%80%8D");
                 return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
     }
