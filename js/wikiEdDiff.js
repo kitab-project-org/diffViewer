@@ -941,8 +941,10 @@ var WikEdDiff = function () {
 
 		// Strip trailing newline (.js only)
 		if ( this.config.stripTrailingNewline === true ) {
-			if ( newString.substr( -1 ) === '\n' && oldString.substr( -1 === '\n' ) ) {
+			if ( newString.substr( -1 ) === '\n') {
 				newString = newString.substr( 0, newString.length - 1 );
+      }
+      if (oldString.substr( -1 ) === '\n' ) {
 				oldString = oldString.substr( 0, oldString.length - 1 );
 			}
 		}
