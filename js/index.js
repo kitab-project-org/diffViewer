@@ -8,8 +8,7 @@ separate fields.
 TO DO:
 * find a way to archive the output
 * further testing + customization
-* implement options:
-  - keep new line characters?
+* implement moved sections in the refine function
 
 See:
 * description of the Wikipedia algorithm: https://en.wikipedia.org/wiki/User:Cacycle/diff
@@ -58,7 +57,7 @@ var inputB = "الي النهروان وذلك يوم السبت فاقام في
 
 var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
 loadFromTextareaBtn, uploadBtn, inputBtn, optionsBtn, svgBtn, pngBtn, resetButton,
-optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, rowsChk, punctCheck, punct,
+optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, highlightDiffBtn, highlightCommonBtn, rowsChk, punctCheck, punct,
 ngramInput, refine_n, cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
 normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal, closeSpan, inputfileBtn, csvTable, rowFilterInp,
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
@@ -152,6 +151,11 @@ window.addEventListener('load', function() {
 
   resetButton = document.getElementById("resetButton");
   resetButton.addEventListener("click", resetOptions);
+
+  highlightDiffBtn = document.getElementById("highlightDiffBtn");
+  highlightDiffBtn.addEventListener("click", toggleHighlighting);
+  highlightCommonBtn = document.getElementById("highlightCommonBtn");
+  highlightCommonBtn.addEventListener("click", toggleHighlighting);
   rowsChk = document.getElementById("rowsCheck");
   rowsChk.addEventListener("change",  calcDiffIfVisible);
   fontSizeInp = document.getElementById("fontSizeInput");
@@ -397,6 +401,40 @@ function resetOptions(){
   changeFontSize();
 }
 
+function toggleHighlighting(){
+  if (highlightDiffBtn.checked){
+    document.documentElement.style.setProperty("--bg-col-a", "lightgreen");
+    document.documentElement.style.setProperty("--bg-col-b", "lightblue");
+    document.documentElement.style.setProperty("--bg-col-c", "transparent");
+    let outputIntroText = `
+      <p>
+        Color coding:
+        <span class="removed">only in text A</span>
+        <span> - </span>
+        <span class="added">only in text B</span>
+        <span> - </span>
+        <span class="moved">in text A and B but in different position</span>
+        <span> - </span>
+        (not highlighted: in texts A and B)
+      </p>`;
+    document.getElementById("outputIntro").innerHTML = outputIntroText;
+  } else {
+    document.documentElement.style.setProperty("--bg-col-a", "white");
+    document.documentElement.style.setProperty("--bg-col-b", "white");
+    document.documentElement.style.setProperty("--bg-col-c", "lightblue");
+    let outputIntroText = `
+      <p>
+        Color coding:
+        <span class="common">common text in text A and text B</span>
+        <span> - </span>
+        <span class="moved">in text A and B but in different position</span>
+        <span> - </span>
+        (not highlighted: different in texts A and B)
+      </p>`;
+    document.getElementById("outputIntro").innerHTML = outputIntroText;
+  }
+}
+
 function changeFontSize(){
   let fs = parseInt(fontSizeInp.value);
   document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
@@ -480,6 +518,12 @@ function getLineOffsets(s){
 }
 
 function displayDiff(aHtml, bHtml){
+  // remove empty tags:
+  aHtml = aHtml.replace(/<span class="\w+"><\/span>/g, "");
+  bHtml = bHtml.replace(/<span class="\w+"><\/span>/g, "");
+  // merge neighboring tags of the same class:
+  aHtml = aHtml.replace(/(?<=<span class="(\w+)">)([^<]+)<\/span><span class="\1">/g, '$2');
+  bHtml = bHtml.replace(/(?<=<span class="(\w+)">)([^<]+)<\/span><span class="\1">/g, '$2');
   let newRow = document.getElementById("outputTable").insertRow(-1);
   let cellA = newRow.insertCell(0);
   cellA.innerHTML = aHtml.replace(/¶/g, "<br>");
@@ -590,8 +634,9 @@ function shingle(s, n){
 
 //////////////////////// MAIN FUNCTIONS ///////////////////////////////////////
 
-function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
+/*function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
   let inDel = false;
+  let inCommon = false;
   let usedChars = 0;
   for (let i=0; i<O.length; i++){
     var token = O[i];
@@ -599,15 +644,38 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
     //console.log("usedChars: "+usedChars);
     if (typeof OArr[i] === "string") { // no equivalent found in other string N
       //console.log("= deletion: ")
+      // deal with first characters of first n-gram
+      if (i === 0){
+        let j = 0;
+        let commonChars = "";
+        while (j<n){
+          if (OArr[0][j] === NArr[0][j]) {
+            //bHtml += NArr[0][j];
+            commonChars += OArr[0][j];
+            j++;
+            //usedChars = j;
+          } else {
+            break;
+          }
+        }
+        if (commonChars){
+          aHtml += '<span class="common">'+commonChars+'</span>';
+          usedChars = j;
+        }
+      }
       if (! inDel) {
         //console.log("not yet in del section");
-        if (i > n) {
-          aHtml += token.substring(usedChars, n-1) + '<span class="removed">' ;
+        if (i >= n) {
           //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
+          if (inCommon){
+            aHtml += token.substring(usedChars, n-1)+'</span>';
+            inCommon = false;
+          } else {
+            aHtml += '<span class="common">'+token.substring(usedChars, n-1)+'</span>';
+          }
           usedChars = n-1;
-        } else {
-          aHtml += '<span class="removed">' ;
         }
+        aHtml += '<span class="removed">' ;
         inDel = true;
       }
       if (usedChars == 0) {
@@ -620,8 +688,13 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
       //console.log(" = Common words");
       let j = OArr[i];  // the index of the equivalent token in the other string
       if (inDel) {
-        aHtml += '</span>' ;
+        aHtml += '</span><span class="common">' ;
         inDel = false;
+        inCommon = true;
+      }
+      if (! inCommon){
+        aHtml += '<span class="common">' ;
+        inCommon = true;
       }
       if (usedChars == 0) {
         aHtml += token[0];
@@ -631,26 +704,50 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
     }
   }
   aHtml += token.substring(1+usedChars,n);
-  if (inDel) {
+  if (inDel || inCommon) {
     aHtml += '</span>'
   }
 
   let inAdd = false;
+  inCommon = false;
   usedChars = 0;
   for (let i=0; i<N.length; i++){
     var token = N[i];
-    //console.log(i + " token: "+[token]);
-    //console.log("usedChars: "+usedChars);
+    console.log(i + " token: "+[token]);
+    console.log("usedChars: "+usedChars);
     if (typeof NArr[i] === "string") { // no equivalent found in other string N
+      // deal with first characters of first n-gram
+      if (i === 0){
+        let j = 0;
+        let commonChars = "";
+        while (j<n){
+          if (OArr[0][j] === NArr[0][j]) {
+            //bHtml += NArr[0][j];
+            commonChars += NArr[0][j];
+            j++;
+            //usedChars = j;
+          } else {
+            break;
+          }
+        }
+        if (commonChars){
+          bHtml += '<span class="common">'+commonChars+'</span>';
+          usedChars = j;
+        }
+      }
       if (! inAdd) {
         //console.log("not yet in del section");
-        if (i > n) {
-          bHtml += token.substring(usedChars, n-1) + '<span class="added">' ;
+        if (i >= n) {
           //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
+          if (inCommon){
+            bHtml += token.substring(usedChars, n-1) + '</span>' ;
+            inCommon = false;
+          } else {
+            bHtml += '<span class="common">'+token.substring(usedChars, n-1)+'</span>';
+          }
           usedChars = n-1;
-        } else {
-          bHtml += '<span class="added">' ;
         }
+        bHtml += '<span class="added">' ;
         inAdd = true;
       }
       if (usedChars == 0) {
@@ -661,22 +758,132 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
     } else {
       //console.log(" = Common words");
       let j = NArr[i];  // the index of the equivalent token in the other string
-      if (inAdd) {
-        bHtml += '</span>' ;
-        inAdd = false;
+
+      if (! inCommon) {
+        //console.log("not yet in del section");
+        if (i > n) {
+          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
+          if (inAdd){
+            bHtml += '</span>' ;
+            inAdd = false;
+          }
+        }
+        if (inAdd){
+          bHtml += '</span>';
+          inAdd = false;
+        }
+        bHtml += '<span class="common">' ;
+        inCommon = true;
       }
+
       if (usedChars == 0) {
         bHtml += token[0];
-      } else {
+      } else {  // characters have already been added to the previous tag!
         usedChars--;
       }
     }
   }
   bHtml += token.substring(1+usedChars,n);
-  if (inAdd) {
+  if (inAdd || inCommon) {
     bHtml += '</span>'
   }
   return [aHtml, bHtml];
+}*/
+
+/*
+  * Mark up the Heckel array `toksArr` and add it to the `xHtml string`.
+
+  * @param {array} toks: shingled n-gram tokens of the string to be refined.
+  * @param {array} toksArr: contains for each n-gram token, its index position in the other Heckel array, or the token itself if it was not found in the other array.
+  * @param {array} otherArr: contains for each n-gram token in the other string, its index position in the other Heckel array, or the token itself if it was not found in the other array.
+  * @param {string} xHtml: html string to which the marked up string should be appended.
+  * @param {number} n: n-gram class
+  * @param {string} spanClass: name of the class ("added" / "removed") of the spans to which the parts of the string that differ from the other should be added.
+*/
+function markupHeckelArray(toks, toksArr, otherArr, xHtml, n, spanClass){
+  let inDiff = false;
+  let inCommon = false;
+  let usedChars = 0;
+
+  for (let i=0; i<toks.length; i++){
+    var token = toks[i];
+    console.log(i + " token: "+[token]);
+    console.log("usedChars: "+usedChars);
+    if (typeof toksArr[i] === "string") { // no equivalent found in other string N
+      // deal with first characters of first n-gram
+      if (i === 0){
+        let j = 0;
+        let commonChars = "";
+        while (j<n){
+          if (toksArr[0][j] === otherArr[0][j]) {
+            //bHtml += NArr[0][j];
+            commonChars += toksArr[0][j];
+            j++;
+            //usedChars = j;
+          } else {
+            break;
+          }
+        }
+        if (commonChars){
+          xHtml += '<span class="common">'+commonChars+'</span>';
+          usedChars = j;
+        }
+      }
+      if (! inDiff) {
+        //console.log("not yet in del section");
+        if (i >= n-1) {
+          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
+          if (inCommon){
+            xHtml += token.substring(usedChars, n-1) + '</span>' ;
+            inCommon = false;
+          } else {
+            xHtml += '<span class="common">'+token.substring(usedChars, n-1)+'</span>';
+          }
+          usedChars = n-1;
+        }
+        if (inCommon){
+          xHtml += '</span>' ;
+          inCommon = false;
+        }
+        xHtml += '<span class="'+spanClass+'">' ;//'<span class="added">' ;
+        inDiff = true;
+      }
+      if (usedChars == 0) {
+        xHtml += token[0];
+      } else {
+        usedChars--;
+      }
+    } else {
+      //console.log(" = Common words");
+      if (! inCommon) {
+        //console.log("not yet in del section");
+        if (i > n) {
+          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
+          if (inDiff){
+            xHtml += '</span>' ;
+            inDiff = false;
+          }
+        }
+        if (inDiff){
+          xHtml += '</span>';
+          inDiff = false;
+        }
+        xHtml += '<span class="common">' ;
+        inCommon = true;
+      }
+
+      if (usedChars == 0) {
+        xHtml += token[0];
+      } else {  // characters have already been added to the previous tag!
+        usedChars--;
+      }
+    }
+  }
+  xHtml += token.substring(1+usedChars,n);
+  if (inDiff || inCommon) {
+    xHtml += '</span>'
+  }
+  return xHtml;
 }
 
 /*
@@ -687,6 +894,8 @@ function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
  */
 
 function heckel(O, N){
+  O = ["START", ...O, "END"];
+  N = ["START", ...N, "END"];
   var ST = new Object();  // symbol table
   var OArr = new Array();   // array of Old string
   var NArr = new Array();  // array of New string
@@ -770,7 +979,9 @@ function heckel(O, N){
       }
     }
   }
-
+  // remove START and END indications:
+  OArr = OArr.slice(1, -1);
+  NArr = NArr.slice(1, -1);
   // STEP6: piece the string back together, inserting html tags: in separate funtion.
 
   return [OArr, NArr];
@@ -796,7 +1007,9 @@ function refine(O, N, aHtml, bHtml, nextChars){
     //console.log("N: "+N);
     //console.log("N shingled: "+Nshingles);
     let [OArr, NArr] = heckel(Oshingles, Nshingles);
-    [aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
+    //[aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
+    aHtml = markupHeckelArray(Oshingles, OArr, NArr, aHtml, refine_n, "removed");
+    bHtml = markupHeckelArray(Nshingles, NArr, OArr, bHtml, refine_n, "added");
   }
   //console.log("aHtml.substring(aHtml.length-5, aHtml.length-1): "+aHtml.substring(aHtml.length-5, aHtml.length-1));
 
@@ -852,9 +1065,10 @@ function parseDiffHtml(diffHtml){
         //displayDiff(aHtml, bHtml);
 
       [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
+      console.log(pos_changes);
       pos_changes = {"Old" : "", "New" : ""};
-      aHtml += c.textContent;
-      bHtml += c.textContent;
+      aHtml += '<span class="common">' + c.textContent + '</span>';
+      bHtml += '<span class="common">' + c.textContent + '</span>';
     } else if (c.classList.contains("wikEdDiffInsert")) {
       if (VERBOSE) {console.log("MARK IN B (INSERTION)");}
       //pos_changes["New"] += c.textContent;

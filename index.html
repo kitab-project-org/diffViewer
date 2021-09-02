@@ -14,6 +14,9 @@
 <style>
   :root {
     --ar-chars-font-size: 20px;
+    --bg-col-a: lightgreen;
+    --bg-col-b: lightblue;
+    --bg-col-c: transparent;
   }
   body {
     font-family: 'Roboto', sans-serif;
@@ -40,11 +43,15 @@
   }
 
   .added {
-    background-color: lightgreen;
+    background-color: var(--bg-col-a);
     border-radius: 3px;
   }
   .removed {
-    background-color: lightblue;
+    background-color: var(--bg-col-b);
+    border-radius: 3px;
+  }
+  .common {
+    background-color: var(--bg-col-c);
     border-radius: 3px;
   }
   .moved {
@@ -242,6 +249,12 @@
 <div id="options">
   <p style="padding-top: 10px">Options:</p>
   <div style="margin-left: 20px;">
+    <label for="highlightDiffBtn">Highlight </label>
+    <input type="radio" id="highlightDiffBtn" name="highlightWhat" value="diff" checked>
+    <label for="highlightDiffBtn">difference </label>
+    <input type="radio" id="highlightCommonBtn" name="highlightWhat" value="common">
+    <label for="highlightCommonBtn">common text</label>
+    <br>
     <input type="checkbox" id="cleanCheck" name="cleanCheck" checked>
     <label for="cleanCheck">remove OpenITI tags from texts</label>
     <br>
