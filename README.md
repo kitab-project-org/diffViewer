@@ -1,6 +1,6 @@
 # diffViewer
 
-Link: https://kitab-project-org.github.io/diffViewer/
+Link: https://kitab-project.org/diffViewer/
 
 This app displays the differences between two strings of characters.
 Contrary to most other diff viewers, it is geared towards comparing texts
