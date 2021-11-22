@@ -1,6 +1,6 @@
-# OpenITIdiffViewer
+# diffViewer
 
-Link: https://pverkind.github.io/OpenITIdiffViewer/
+Link: https://pverkind.github.io/diffViewer/
 
 This app displays the differences between two strings of characters.
 Contrary to most other diff viewers, it is geared towards comparing texts
@@ -13,18 +13,18 @@ developed for Wikipedia (javascript code [here](https://en.wikipedia.org/wiki/Us
 This library does not only detect text that was added or deleted, but also
 text that was moved from one place to another.
 
-The OpenITIdiffViewer modifies the output from the wikEd tool in two ways:
+The diffViewer modifies the output from the wikEd tool in two ways:
 
 * the wikEd tool displays the differences between two texts in one
   composite text rather than side-by-side.
   ![wikEd: inline display](img/sample_text_wikEd.png)
-  The OpenITI diff viewer analyses the output of the wikEd tool and displays the
+  The diffViewer analyses the output of the wikEd tool and displays the
   result side by side:
-  ![OpenITIdiffViewer: side-by-side display](img/sample_text_side_by_side.svg)
+  ![diffViewer: side-by-side display](img/sample_text_side_by_side.svg)
 
 * the wikEd tool seems to have difficulties with Arabic's prefixes
 (for example, if text A has *wa-faʿala* and text B *fa-faʿala*, both words would be
-marked as different). The OpenITIdiffViewer adds a refining step of the wikEd
+marked as different). The diffViewer adds a refining step of the wikEd
 output to deal with this issue (in the example above, only *wa-* and *fa-* would
 be marked).
 
