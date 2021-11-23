@@ -112,7 +112,8 @@ if a tag is inserted between two Arabic letters that should be connected,
 the connection between the letters is broken. 
 This can be avoided by inserting a zero-width-joiner character on both sides of the tag.
 The DiffViewer uses a patched version of the `dom-to-image.js` library
-that is modified to add such characters in the relevant locations.
+that is modified to add such characters in the relevant locations
+(see https://github.com/tsayen/dom-to-image/issues/391).
 
 ## TO DO:
 
