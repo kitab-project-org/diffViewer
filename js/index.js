@@ -279,7 +279,7 @@ function parseCSV(r){
   } else {
     var csvSeparator = new RegExp(",", "g");
   }
-  r.trim().split("\n").forEach(function(row){
+  r.trim().split(/[\r\n]+/g).forEach(function(row){
     let rowArray = [];
     //row.split(/[,\t]/g).forEach(function(cell){
     row.split(csvSeparator).forEach(function(cell){
