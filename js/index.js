@@ -271,7 +271,7 @@ function clear(){
 
 function parseCSV(r){
   let csvArray = [];
-  let tabs = r.match(/\t/g).length;
+  let tabs = (r.match(/\t/g) || []).length;
   let commas = (r.match(/,/g) || []).length;
   //console.log("tabs: "+tabs, "commas: "+commas);
   if (tabs > commas){
