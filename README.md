@@ -1,6 +1,6 @@
-# OpenITIdiffViewer
+# diffViewer
 
-Link: https://pverkind.github.io/OpenITIdiffViewer/
+Link: https://kitab-project.org/diffViewer/
 
 This app displays the differences between two strings of characters.
 Contrary to most other diff viewers, it is geared towards comparing texts
@@ -13,18 +13,18 @@ developed for Wikipedia (javascript code [here](https://en.wikipedia.org/wiki/Us
 This library does not only detect text that was added or deleted, but also
 text that was moved from one place to another.
 
-The OpenITIdiffViewer modifies the output from the wikEd tool in two ways:
+The diffViewer modifies the output from the wikEd tool in two ways:
 
 * the wikEd tool displays the differences between two texts in one
   composite text rather than side-by-side.
   ![wikEd: inline display](img/sample_text_wikEd.png)
-  The OpenITI diff viewer analyses the output of the wikEd tool and displays the
+  The diffViewer analyses the output of the wikEd tool and displays the
   result side by side:
-  ![OpenITIdiffViewer: side-by-side display](img/sample_text_side_by_side.svg)
+  ![diffViewer: side-by-side display](img/sample_text_side_by_side.svg)
 
 * the wikEd tool seems to have difficulties with Arabic's prefixes
 (for example, if text A has *wa-faʿala* and text B *fa-faʿala*, both words would be
-marked as different). The OpenITIdiffViewer adds a refining step of the wikEd
+marked as different). The diffViewer adds a refining step of the wikEd
 output to deal with this issue (in the example above, only *wa-* and *fa-* would
 be marked).
 
@@ -104,6 +104,16 @@ the "Download png" and "Download svg" buttons.
 If you uploaded multiple text pairs using the tsv upload function, you can
 download png or svg images for all files at once using the "Download all as png"
 and "Download all as svg" buttons.
+
+## Note on SVG files
+
+SVG, being an XML format, has a problem with Arabic text: 
+if a tag is inserted between two Arabic letters that should be connected,
+the connection between the letters is broken. 
+This can be avoided by inserting a zero-width-joiner character on both sides of the tag.
+The DiffViewer uses a patched version of the `dom-to-image.js` library
+that is modified to add such characters in the relevant locations
+(see https://github.com/tsayen/dom-to-image/issues/391).
 
 ## TO DO:
 
