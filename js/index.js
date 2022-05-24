@@ -58,7 +58,7 @@ var inputB = "الي النهروان وذلك يوم السبت فاقام في
 var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
 loadFromTextareaBtn, uploadBtn, inputBtn, optionsBtn, svgBtn, pngBtn, resetButton,
 optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, highlightDiffBtn, highlightCommonBtn, rowsChk, punctCheck, punct,
-ngramInput, refine_n, cleanChk, arCharInp, fontSizeInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
+ngramInput, refine_n, cleanChk, arCharInp, fontSizeInp, imgWidthInp, imgHeightInp, imgDpiInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
 normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal, closeSpan, inputfileBtn, csvTable, rowFilterInp,
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
@@ -66,6 +66,12 @@ nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadA
 var VERBOSE = false;
 var inputData = [];
 var currentPage = 0;
+var imgWidth = 0;
+//var imgHeight = 0;
+var defaultImgDpi = 96;
+var defaultImgWidth = 180;
+var imgDpi = 96;
+const inch = 25.4;
 
 // add event listeners to buttons etc.:
 
@@ -98,9 +104,10 @@ window.addEventListener('load', function() {
   resizeCont.appendChild(resizer);
   //var resizer = document.getElementsByClassName("resizer")[0];
   resizer.addEventListener('mousedown', initResize, false);
-  resizer.addEventListener('hover', function(){
+  /*resizer.addEventListener('hover', function(){
     resizer.style.color = "lightgrey";
-  })
+  })*/
+  //resizer.setAttribute("onhover", "this.style.color='lightgrey'");
 
   loadFromTextareaBtn = document.getElementById("calcDiffButton");
   loadFromTextareaBtn.addEventListener("click", loadFromTextArea);
@@ -160,6 +167,12 @@ window.addEventListener('load', function() {
   rowsChk.addEventListener("change",  calcDiffIfVisible);
   fontSizeInp = document.getElementById("fontSizeInput");
   fontSizeInp.addEventListener("change",  changeFontSize);
+  imgWidthInp = document.getElementById("imgWidthInput");
+  imgWidthInp.addEventListener("change",  changeImgWidth);
+  //imgHeightInp = document.getElementById("imgHeightInput");
+  //imgHeightInp.addEventListener("change",  changeImgHeight);
+  imgDpiInp = document.getElementById("imgDpiInput");
+  imgDpiInp.addEventListener("change",  changeImgDpi);
   arCharInp = document.getElementById("arCharInput");
   arCharInp.addEventListener("change",  calcDiffIfVisible);
   cleanChk = document.getElementById("cleanCheck");
@@ -271,7 +284,7 @@ function clear(){
 
 function parseCSV(r){
   let csvArray = [];
-  let tabs = r.match(/\t/g).length;
+  let tabs = (r.match(/\t/g) || []).length;
   let commas = (r.match(/,/g) || []).length;
   //console.log("tabs: "+tabs, "commas: "+commas);
   if (tabs > commas){
@@ -279,7 +292,7 @@ function parseCSV(r){
   } else {
     var csvSeparator = new RegExp(",", "g");
   }
-  r.trim().split("\n").forEach(function(row){
+  r.trim().split(/[\r\n]+/g).forEach(function(row){
     let rowArray = [];
     //row.split(/[,\t]/g).forEach(function(cell){
     row.split(csvSeparator).forEach(function(cell){
@@ -287,6 +300,7 @@ function parseCSV(r){
     })
     csvArray.push(rowArray);
   })
+  console.log(csvArray[2]);
   return csvArray;
 }
 
@@ -394,6 +408,8 @@ function resetOptions(){
   normalizeYaCheck.checked = true;
   normalizeHaCheck.checked = true;
   fontSizeInp.value = "16";
+  imgWidthInp.value = String(defaultImgWidth);
+  imgDpiInp.value = String(defaultImgDpi);
   ngramInput.value = "3";
   rowsCheck.checked = false;
   arCharInp.value = "20";
@@ -441,18 +457,53 @@ function changeFontSize(){
   calcDiffIfVisible();
 }
 
+function changeImgWidth(){
+  let w = parseInt(imgWidthInp.value);
+  if (!isNaN(w)){
+    imgWidth = w;
+  } else {
+    imgWidth = defaultImgWidth;
+  }
+  console.log("Image width changed to "+imgWidth);
+}
+
+/*function changeImgHeight(){
+  let h = parseInt(imgHeightInp.value);
+  if (!isNaN(h)){
+    imgHeight = h;
+  }
+}*/
+
+function changeImgDpi(){
+  let d = parseInt(imgDpiInp.value);
+  //console.log("dpi changed to: "+d);
+  if (!isNaN(d)){
+    imgDpi = d;
+  } else {
+    imgDpi = defaultImgDpi;
+  }
+  console.log("dpi changed to: "+imgDpi);
+}
+
+
 // allow resizing the output container: code from https://jsfiddle.net/RainStudios/mw786v1w/
 function initResize(e) {
+   window.resizeContainer = e.target.parentElement;
    window.addEventListener('mousemove', Resize, false);
    window.addEventListener('mouseup', stopResize, false);
 }
 function Resize(e) {
-   resizeCont.style.width = (e.clientX - resizeCont.offsetLeft) + 'px';
+   console.log(resizeContainer);
+   console.log(resizeContainer.style.width);
+   resizeContainer.style.width = (e.clientX - resizeContainer.offsetLeft) + 'px';
+   console.log(resizeContainer.style.width);
+   //resizeCont.style.width = (e.clientX - resizeCont.offsetLeft) + 'px';
+
 }
 function stopResize(e) {
     window.removeEventListener('mousemove', Resize, false);
     window.removeEventListener('mouseup', stopResize, false);
-    calcDiffIfVisible();
+    //calcDiffIfVisible();
 }
 
 function selectAllRows(){
@@ -562,16 +613,89 @@ function cleanText(text){
   return text
 }
 
+
 function downloadSvg(){
   domtoimage.toSvg(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
     downloadFile(dataUrl, "diff.svg");
   });
 }
 
+function mmToPix(mm, dpi=300){
+  return mm * dpi / inch;
+}
+
+function px(node, styleProperty) {
+  // from dom-to-image.js
+  var value = window.getComputedStyle(node).getPropertyValue(styleProperty);
+  return parseFloat(value.replace('px', ''));
+}
+
+function getNodeWidth(node) {
+  // from dom-to-image.js
+  var leftBorder = px(node, 'border-left-width');
+  var rightBorder = px(node, 'border-right-width');
+  return node.scrollWidth + leftBorder + rightBorder;
+}
+
+function getNodeHeight(node) {
+  // from dom-to-image.js
+  var topBorder = px(node, 'border-top-width');
+  var bottomBorder = px(node, 'border-bottom-width');
+  return node.scrollHeight + topBorder + bottomBorder;
+}
+
 function downloadPng(){
-  domtoimage.toPng(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
+  let fs = parseInt(fontSizeInp.value);
+  let options = { bgcolor: 'white' };
+  // update the values for the image width and dpi:
+  changeImgWidth();
+  changeImgDpi();
+
+  if (!imgWidth) {imgWidth = defaultImgWidth;}
+  if (!imgDpi) {imgDpi = defaultImgDpi;}
+
+  // get the width and height of the table, in pixels:
+  let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
+  let nodeHeight = getNodeHeight(document.getElementById("outputTable"));
+  console.log("Original image size: "+nodeWidth+" x "+nodeHeight+" px");
+
+  // calculate the output width, in pixels:
+  let w = mmToPix(imgWidth, imgDpi);
+  options.width = Math.ceil(w);
+  console.log(`Desired output width: ${imgWidth} mm (= ${imgWidth/inch} inch), dpi: ${imgDpi} => ${w} px (rounded to ${options.width} px)`);
+
+  // calculate the factor by which the height and font size will need to be multiplied:
+  let q = w / nodeWidth;
+
+  // calculate the output image's height
+  options.height = Math.ceil(nodeHeight * q);
+  console.log(`Output image size: ${options.width} x ${options.height} px`);
+
+  // temporarily adapt font size to output measurements:
+  let tempfs = Math.ceil(fs * q);
+  console.log(`original font size: ${fs}, q: ${q}, output font size: ${tempfs}`);
+  document.documentElement.style.setProperty("--ar-chars-font-size", `${tempfs}px`);
+
+  // increase the width of the column divider and padding:
+  let colDivWidth = Math.floor(1 * q) | 1;
+  document.documentElement.style.setProperty("--col-divider", `solid ${colDivWidth}px lightgrey`);
+  let tempPadding = Math.floor(10*q);
+  document.documentElement.style.setProperty("--col-padding", `${tempPadding}px`);
+  //} else {
+  //  let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
+  //  let nodeHeight = getNodeHeight(document.getElementById("outputTable"));
+  //  console.log("image size: "+nodeWidth+" x "+nodeHeight+" px");
+  //}
+  console.log(options);
+
+  domtoimage.toPng(document.getElementById("outputTable"), options).then(dataUrl => {
     downloadFile(dataUrl, "diff.png");
+    // reset the font size, divider width and padding:
+    document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
+    document.documentElement.style.setProperty("--col-divider", `solid 1px lightgrey`);
+    document.documentElement.style.setProperty("--col-padding", "10px");
   });
+  //
 }
 
 async function downloadAll(fileType){
@@ -1065,6 +1189,9 @@ function parseDiffHtml(diffHtml){
         //displayDiff(aHtml, bHtml);
 
       [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
+      //aHtml += '<span class="removed">'+ pos_changes["Old"] +'</span>';
+      //bHtml += '<span class="added">'+ pos_changes["New"] +'</span>';
+
       console.log(pos_changes);
       pos_changes = {"Old" : "", "New" : ""};
       aHtml += '<span class="common">' + c.textContent + '</span>';
@@ -1136,6 +1263,9 @@ function parseDiffHtml(diffHtml){
   //console.log("pos_changes at end:");
   //console.log(pos_changes);
   [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, " ");
+  //aHtml += '<span class="removed">'+ pos_changes["Old"] +'</span>';
+  //bHtml += '<span class="added">'+ pos_changes["New"] +'</span>';
+
 
   // display the difs:
   displayDiff(aHtml, bHtml);
