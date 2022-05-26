@@ -152,6 +152,10 @@
     /*font-family: "Amiri", sans-serif;*/
     font-size: var(--ar-chars-font-size);
     border-collapse: collapse;
+    height: auto !important;
+  }
+  tbody {
+    height: auto  !important;
   }
   td {
     width: 48%;
@@ -163,6 +167,7 @@
     /*border-left: solid 1px lightgrey;*/
     border-left: var(--col-divider);
     vertical-align: top;
+    height: auto  !important;
   }
   td:first-child {
     border-left: solid 0px lightgrey;
@@ -170,6 +175,7 @@
   tr {
     padding: 0px;
     margin: 0px;
+    height: auto  !important;
   }
   #downloadDiv {
     position: absolute;
@@ -379,11 +385,11 @@
     <br>
     <br>
     <label for="imgWidthInput">Image size: width: </label>
-    <input type="text" class="num-input" id="imgWidthInput" name="imgWidthInput" value="180">
+    <input type="text" class="num-input" id="imgWidthInput" name="imgWidthInput" value="200">
     <!--<label for="imgHeightInput">mm; height: </label>
     <input type="text" class="num-input" id="imgHeightInput" name="imgHeightInput" value="">-->
     <label for="imgDpiInput">mm; dpi: </label>
-    <input type="text" class="num-input" id="imgDpiInput" name="imgDpiInput" value="96">
+    <input type="text" class="num-input" id="imgDpiInput" name="imgDpiInput" value="300">
     <br>
     <label for="ngramInput">Refine the results using shingled character</label>
     <input type="text" class="num-input" id="ngramInput" name="ngramInput" value="3" checked>

@@ -66,12 +66,15 @@ nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadA
 var VERBOSE = false;
 var inputData = [];
 var currentPage = 0;
-var imgWidth = 0;
 //var imgHeight = 0;
-var defaultImgDpi = 96;
-var defaultImgWidth = 180;
-var imgDpi = 96;
+var defaultImgDpi = 300;
+var imgDpi = 300;
+var defaultImgWidth = 200;
+var imgWidth = 0;
+var defaultFontSize = 20;
 const inch = 25.4;
+
+
 
 // add event listeners to buttons etc.:
 
@@ -167,6 +170,8 @@ window.addEventListener('load', function() {
   rowsChk.addEventListener("change",  calcDiffIfVisible);
   fontSizeInp = document.getElementById("fontSizeInput");
   fontSizeInp.addEventListener("change",  changeFontSize);
+  let fs = parseInt(fontSizeInp.value);
+  document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
   imgWidthInp = document.getElementById("imgWidthInput");
   imgWidthInp.addEventListener("change",  changeImgWidth);
   //imgHeightInp = document.getElementById("imgHeightInput");
@@ -453,6 +458,10 @@ function toggleHighlighting(){
 
 function changeFontSize(){
   let fs = parseInt(fontSizeInp.value);
+  if (isNaN(fs)) {
+    fs = defaultFontSize;
+    fontSizeInp.value = defaultFontSize;
+  }
   document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
   calcDiffIfVisible();
 }
@@ -493,10 +502,10 @@ function initResize(e) {
    window.addEventListener('mouseup', stopResize, false);
 }
 function Resize(e) {
-   console.log(resizeContainer);
-   console.log(resizeContainer.style.width);
+   if (VERBOSE) {console.log(resizeContainer);}
+   if (VERBOSE) {console.log(resizeContainer.style.width);}
    resizeContainer.style.width = (e.clientX - resizeContainer.offsetLeft) + 'px';
-   console.log(resizeContainer.style.width);
+   if (VERBOSE) {console.log(resizeContainer.style.width);}
    //resizeCont.style.width = (e.clientX - resizeCont.offsetLeft) + 'px';
 
 }
@@ -614,11 +623,7 @@ function cleanText(text){
 }
 
 
-function downloadSvg(){
-  domtoimage.toSvg(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
-    downloadFile(dataUrl, "diff.svg");
-  });
-}
+
 
 function mmToPix(mm, dpi=300){
   return mm * dpi / inch;
@@ -644,15 +649,23 @@ function getNodeHeight(node) {
   return node.scrollHeight + topBorder + bottomBorder;
 }
 
-function downloadPng(){
-  let fs = parseInt(fontSizeInp.value);
-  let options = { bgcolor: 'white' };
+async function downloadSvg(){
+  domtoimage.toSvg(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
+    downloadFile(dataUrl, "diff.svg");
+  });
+}
+
+async function downloadPng(){
   // update the values for the image width and dpi:
   changeImgWidth();
   changeImgDpi();
 
-  if (!imgWidth) {imgWidth = defaultImgWidth;}
-  if (!imgDpi) {imgDpi = defaultImgDpi;}
+  let fs = parseInt(fontSizeInp.value);
+  let options = { bgcolor: 'white' };
+
+
+  //if (!imgWidth) {imgWidth = defaultImgWidth;}
+  //if (!imgDpi) {imgDpi = defaultImgDpi;}
 
   // get the width and height of the table, in pixels:
   let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
@@ -672,7 +685,7 @@ function downloadPng(){
   console.log(`Output image size: ${options.width} x ${options.height} px`);
 
   // temporarily adapt font size to output measurements:
-  let tempfs = Math.ceil(fs * q);
+  let tempfs = Math.floor(fs * q);
   console.log(`original font size: ${fs}, q: ${q}, output font size: ${tempfs}`);
   document.documentElement.style.setProperty("--ar-chars-font-size", `${tempfs}px`);
 
@@ -682,11 +695,11 @@ function downloadPng(){
   let tempPadding = Math.floor(10*q);
   document.documentElement.style.setProperty("--col-padding", `${tempPadding}px`);
   //} else {
-  //  let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
-  //  let nodeHeight = getNodeHeight(document.getElementById("outputTable"));
+  //let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
+  //let nodeHeight = getNodeHeight(document.getElementById("outputTable"));
   //  console.log("image size: "+nodeWidth+" x "+nodeHeight+" px");
   //}
-  console.log(options);
+  if (VERBOSE) {console.log(options);}
 
   domtoimage.toPng(document.getElementById("outputTable"), options).then(dataUrl => {
     downloadFile(dataUrl, "diff.png");
@@ -704,9 +717,13 @@ async function downloadAll(fileType){
     currentPage = i;
     const r = await calcDiff();
     if (fileType === "png"){
-      downloadPng();
+      await downloadPng();
+      console.log('wait one second');
+      await new Promise((resolve, reject) => setTimeout(resolve, 1000));
     } else if (fileType === "svg") {
-      downloadSvg();
+      await downloadSvg();
+      console.log('wait one second');
+      await new Promise((resolve, reject) => setTimeout(resolve, 1000));
     }
   }
 
@@ -726,11 +743,11 @@ async function downloadAll(fileType){
   }));*/
 }
 
-function downloadAllPng(){
+async function downloadAllPng(){
   downloadAll("png");
 }
 
-function downloadAllSvg(){
+async function downloadAllSvg(){
   downloadAll("svg");
 }
 
@@ -931,8 +948,8 @@ function markupHeckelArray(toks, toksArr, otherArr, xHtml, n, spanClass){
 
   for (let i=0; i<toks.length; i++){
     var token = toks[i];
-    console.log(i + " token: "+[token]);
-    console.log("usedChars: "+usedChars);
+    if (VERBOSE) {console.log(i + " token: "+[token]);}
+    if (VERBOSE) {console.log("usedChars: "+usedChars);}
     if (typeof toksArr[i] === "string") { // no equivalent found in other string N
       // deal with first characters of first n-gram
       if (i === 0){
@@ -1192,7 +1209,7 @@ function parseDiffHtml(diffHtml){
       //aHtml += '<span class="removed">'+ pos_changes["Old"] +'</span>';
       //bHtml += '<span class="added">'+ pos_changes["New"] +'</span>';
 
-      console.log(pos_changes);
+      if (VERBOSE) {console.log(pos_changes);}
       pos_changes = {"Old" : "", "New" : ""};
       aHtml += '<span class="common">' + c.textContent + '</span>';
       bHtml += '<span class="common">' + c.textContent + '</span>';
@@ -1346,6 +1363,10 @@ async function calcDiff() {
   singleDiv = singleDivCheck.checked;
   refine_n = parseInt(ngramInput.value);
   ARCHARS = parseInt(arCharInp.value);
+
+  //update the image width and font size from the options:
+  changeImgWidth();
+
   //console.log("currentPage: "+currentPage);
   if (inputData.length === 1){
     var toBeDisplayed = [["", ""], inputData[currentPage]];
