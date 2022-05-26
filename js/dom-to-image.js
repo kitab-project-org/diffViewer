@@ -341,9 +341,13 @@
                     foreignObject + '</svg>';
             })
             .then(function (svg) {
+                // ADDED BY PV TO FIX SOME ISSUES:
                 // add U+200D ZERO WIDTH JOINER for Arabic-script letter connections that would be broken by a HTML tag:
                 //svg = svg.replace(/(?<=[بتثپجحخچسشصضطظعغفقكکگلمنهيیی][ًٌٍَُِّّْ]*)((?:<(?!br|td)[^>]+>)+)(?=[ء-يٮ-ٳژکگی])/g, "%E2%80%8D$1%E2%80%8D");
                 svg = svg.replace(/(?<=[بتثپجحخچسشصضطظعغفقكکگلمنهيیی][ًٌٍَُِّّْ]*)((?:<\/?(?:span|b\b|del|em|ins|mark|s\b|strong|u\b)[^>]*>)+)(?=[ء-يٮ-ٳژکگی])/g, "%E2%80%8D$1%E2%80%8D");
+                //console.log(svg);
+                // fix size of table rows issue by setting the height of all table elements to auto:
+                svg = svg.replace(/(<(?:tr|td|th|tbody|table)[^>]+?[^\-]height:)[^;]+;/g, "$1 auto;");
                 return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
     }
