@@ -105,15 +105,22 @@ If you uploaded multiple text pairs using the tsv upload function, you can
 download png or svg images for all files at once using the "Download all as png"
 and "Download all as svg" buttons.
 
-## Note on SVG files
+## Note on SVG and PNG output
 
-SVG, being an XML format, has a problem with Arabic text: 
+* SVG, being an XML format, has a problem with Arabic text:
 if a tag is inserted between two Arabic letters that should be connected,
-the connection between the letters is broken. 
+the connection between the letters is broken.
 This can be avoided by inserting a zero-width-joiner character on both sides of the tag.
 The DiffViewer uses a patched version of the `dom-to-image.js` library
 that is modified to add such characters in the relevant locations
 (see https://github.com/tsayen/dom-to-image/issues/391).
+
+* The `dom-to-image.js` library also had a problem with the height of the
+table rows and cells in cases where the diff texts are split into multiple lines:
+the height of the cells was set to a much higher value than necessary.
+The svg output of the `makeSvgDataUri()` function in the `dom-to-image.js` library
+was adapted to manually set the height and of table, tbody, tr and td elements
+to `auto` (setting this in the css was found not to be a solution).
 
 ## TO DO:
 
@@ -121,3 +128,4 @@ that is modified to add such characters in the relevant locations
   for example, *wa-qawm* and *wa-qawmuhu* are highlighted as entirely different
   while there is only one letter different)
 * do not split words in multi-line modus
+* find out why svg files are sometimes very large; MANY spans in it??
