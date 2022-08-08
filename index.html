@@ -65,6 +65,35 @@
   }
   body {
     font-family: 'Roboto', sans-serif;
+    margin: 0;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px 20px;
+        box-shadow: -1px 10px 21px 0px rgba(99,151,255,0.1);
+        -webkit-box-shadow: -1px 10px 21px 0px rgba(99,151,255,0.1);
+        -moz-box-shadow: -1px 10px 21px 0px rgba(99,151,255,0.1);
+  }
+  header > section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header > section > span {
+    font-weight: bolder;
+    font-size: 24px;
+  }
+  main {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .intro-text {
+    text-align: center;
   }
   #outputIntro {
     display: none;
@@ -75,6 +104,11 @@
   #optionButtons {
     display: none;
   }
+  #inputDiv {
+    width: 95%;
+    height: 60vh;
+    margin: 10px 0;
+  }
   textarea {
     font-family: "Amiri", sans-serif;
     /*font-family: "Courier", monospace;*/
@@ -82,7 +116,7 @@
     direction: rtl;
     border: 1px solid lightgrey;
     width: 49%;
-    height: 90%;
+    height: 100%;
     padding: 10px;
     resize: none;
   }
@@ -105,19 +139,18 @@
   }
   #options {
     width: 95%;
-    background-color: darkgrey;
-    padding-left: 10px;
-    padding-right: 10px;
+    background-color: rgb(228, 228, 228);
+    padding: 0 16px 12px 16px;
     border-radius: 4px;
     display: none;
-  }
-  #inputDiv {
-    display: block;
-    width: 95%;
-    height: 70%;
     margin-bottom: 10px;
-    margin-top: 10px;
-    margin-right: 0px;
+  }
+  #options > p {
+    border-bottom: 1px solid rgb(119, 119, 119);
+  }
+
+  #options > div {
+    padding: 0 10px;
   }
 
   input {
@@ -128,9 +161,6 @@
 
   #outputDiv {
     display: none;
-    position: relative;
-    margin-bottom: 10px;
-    margin-top: 10px;
   }
   .resize-container {
     width: 95%;
@@ -184,7 +214,6 @@
   #cDiff {
     font-size: var(--ar-chars-font-size);
     font-family: "Amiri", sans-serif;
-    //margin: 0 auto;
     margin-top: 10;
     display: none;
     direction: rtl;
@@ -304,174 +333,170 @@
   }
 
 </style>
-
-
-
-
 </head>
 
 <body>
-<span style="float: right;">view code on <a href="https://github.com/pverkind/diffViewer" target="_blank">GitHub</a></span>
-<h1>
-  <a href="https://kitab-project.org/data/apps" style="text-decoration:none; padding-left:10px; padding-right:20px; padding-top:20px">
-    <img src="img/logo-small-2-no-padding.svg" height="50">
-  </a>
-  Diff viewer
-</h1>
-
-<div id="inputIntro">
-  <p>Paste the two strings you want to compare in the fields below (or <a id="loadExample" href="#">load an example</a>) and click the display button.</p>
-  <p>You can also upload a csv file using the "Upload from file" button.</p>
-</div>
-
-<div id="outputIntro">
-  <p>
-    Color coding:
-    <span class="removed">only in text A</span>
-    <span> - </span>
-    <span class="added">only in text B</span>
-    <span> - </span>
-    <span class="moved">in text A and B but in different position</span>
-    <span> - </span>
-    (not highlighted: in texts A and B)
-  </p>
-</div>
-
-<div id="buttons">
-  <span id="inputButtons">
-    <input type="button" id="calcDiffButton" value="Display diff">
-    <input type="button" id="clearButton" value="Clear">
-    <input type="button" id="uploadButton" value="Upload from file">
-  </span>
-  <span id="outputButtons">
-    <input type="button" id="inputButton" value="Show input">
-    <input type="button" id="svgButton" value="Download svg">
-    <input type="button" id="pngButton" value="Download png">
-  </span>
-  <span>
-    <input type="button" name="optionsButton" id="optionsButton" value="Options">
-  </span>
-  <span id="optionButtons">
-    <input type="button" name="resetButton" id="resetButton" value="Reset options">
-  </span>
-</div>
-
-<div id="options">
-  <p style="padding-top: 10px">Options:</p>
-  <div style="margin-left: 20px;">
-    <label for="highlightDiffBtn">Highlight </label>
-    <input type="radio" id="highlightDiffBtn" name="highlightWhat" value="diff" checked>
-    <label for="highlightDiffBtn">difference </label>
-    <input type="radio" id="highlightCommonBtn" name="highlightWhat" value="common">
-    <label for="highlightCommonBtn">common text</label>
-    <br>
-    <input type="checkbox" id="cleanCheck" name="cleanCheck" checked>
-    <label for="cleanCheck">remove OpenITI tags from texts</label>
-    <br>
-    <input type="checkbox" id="punctCheck" name="punctCheck" checked>
-    <label for="punctCheck">remove punctuation</label>
-    <br>
-    <label for="normalizeAlifs">Normalize: </label>
-    <input type="checkbox" id="normalizeAlifCheck" name="normalizeAlifCheck" checked>
-    <label for="normalizeAlif">Alifs (أ = ا = إ = آ) </label>
-    <input type="checkbox" id="normalizeYaCheck" name="normalizeYaCheck" checked>
-    <label for="normalizeFinalYa">alif maqṣūra / final yā' (ي = ى) </label>
-    <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck" checked>
-    <label for="normalizeFinalHa">tā marbūṭa / final hā' (ة = ه)</label>
-    <br>
-    <label for="fontSizeInput">Font size: </label>
-    <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="20">
-    <label for="fontSizeInput">px</label>
-    <br>
-    <br>
-    <label for="imgWidthInput">Image size: width: </label>
-    <input type="text" class="num-input" id="imgWidthInput" name="imgWidthInput" value="200">
-    <!--<label for="imgHeightInput">mm; height: </label>
-    <input type="text" class="num-input" id="imgHeightInput" name="imgHeightInput" value="">-->
-    <label for="imgDpiInput">mm; dpi: </label>
-    <input type="text" class="num-input" id="imgDpiInput" name="imgDpiInput" value="300">
-    <br>
-    <label for="ngramInput">Refine the results using shingled character</label>
-    <input type="text" class="num-input" id="ngramInput" name="ngramInput" value="3" checked>
-    <label for="ngramInput">-grams</label>
-    <br>
-    <input type="checkbox" id="rowsCheck" name="rowsCheck">
-    <label for="rowsCheck">
-      divide the output into lines for easier reading (min.
-      <input type="text" class="num-input" id="arCharInput" name="arCharInput" value="20">
-      shared characters per line)
-    </label>
-    <br>
-    <input type="checkbox" id="singleDivCheck" name="singleDivCheck">
-    <label for="singleDivCheck">Display the diff in a single composite text (wikipedia-style)</label>
-  </div>
-</div>
-
-<div id="inputDiv">
-  <div>
-    <textarea id="inputA"></textarea>
-    <textarea id="inputB"></textarea>
-  </div>
-
-</div>
-
-<div id="outputDiv">
-  <!--<div style="display: inline-block; margin: 0 auto; text-align: center;">
-    <span class="chevron top"></span>
-  </div>-->
-  <div class="resize-container">
-    <!--
-    <div class="milestoneLocatorA">
-      <div class="milestoneLocatorLineA"></div>
-    </div>-->
-    <div class="container">
-      <table id="outputTable"></table>
+  <header>
+    <section>
+      <a href="https://kitab-project.org/data/apps">
+        <img src="img/logo-small-2-no-padding.svg" height="40">
+      </a>
+      <span>Diff Viewer</span>
+    </section>
+    <span><a href="https://github.com/pverkind/diffViewer" target="_blank">
+      <img src="img/github-icon.png" height="30" alt="github-code"/> 
+    </a></span>
+  </header>
+  <main>
+    <div id="inputIntro" class="intro-text">
+      <p>Paste the two strings you want to compare in the fields below (or <a id="loadExample" href="#">load an example</a>) and click the display button.</p>
+      <p>You can also upload a csv file using the "Upload from file" button.</p>
     </div>
-    <!--
-    <div class="milestoneLocatorB">
-      <div class="milestoneLocatorLineB"></div>
-    </div>-->
-  </div>
-  <div id="outputSingleDiv">
-    <p>Original inline wikEdDiff output:</p>
-    <div id="cDiff"></div>
-  </div>
-  <!--<span class="chevron bottom"></span>-->
-</div>
-
-<div id="pagination">
-  <input type="button" id="prevPage" value="Previous">
-  <label for="currentPageInput">Page </label>
-  <input type="text" class="num-input" id="currentPageInput" name="currentPageInput">
-  <label for="currentPageInput"> of </label>
-  <span id="lastPageSpan"></span>
-  <input type="button" id="nextPage" value="Next">
-  <input type="button" id="downloadAllPngBtn" value="Download all as png">
-  <input type="button" id="downloadAllSvgBtn" value="Download all as svg">
-</div>
-
-<div class="modal" id="uploadModal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <p>Choose a passim alignment file (srt, csv) to display:</p>
-    <input type="file" name="inputfileButton" id="inputfileButton" accept=".csv, .tsv, .srt">
-    <div id="selectRowsControls">
-      <input type="button" id="loadSelectedRows" value="Load selected rows">
-      <input type="button" id="selectAllRows" value="Select all">
-      <input type="button" id="deselectAllRows" value="Deselect all">
-      <label for="rowFilter">Filter rows: only include rows containing: </label>
-      <input type="text" name="rowFilter" id="rowFilter" value="">
+    
+    <div id="outputIntro" class="intro-text">
+      <p>
+        Color coding:
+        <span class="removed">only in text A</span>
+        -
+        <span class="added">only in text B</span>
+        -
+        <span class="moved">in text A and B but in different position</span>
+        - (not highlighted: in texts A and B)
+      </p>
     </div>
-    <div id="selectRows">
-      <table id="csvTable"></table>
+    
+    <div id="buttons">
+      <span id="inputButtons">
+        <input type="button" id="calcDiffButton" value="Display diff">
+        <input type="button" id="clearButton" value="Clear">
+        <input type="button" id="uploadButton" value="Upload from file">
+      </span>
+      <span id="outputButtons">
+        <input type="button" id="inputButton" value="Show input">
+        <input type="button" id="svgButton" value="Download svg">
+        <input type="button" id="pngButton" value="Download png">
+      </span>
+      <span>
+        <input type="button" name="optionsButton" id="optionsButton" value="Options">
+      </span>
+      <span id="optionButtons">
+        <input type="button" name="resetButton" id="resetButton" value="Reset options">
+      </span>
     </div>
-  </div>
-</div>
-
-<div id="svgDataUrl" style="display: none"></div>
-<div id="pngDataUrl" style="display: none"></div>
-<canvas id="myCanvas"></canvas>
-
+    
+    <div id="options">
+      <p>Options:</p>
+      <div>
+        <label for="highlightDiffBtn">Highlight </label>
+        <input type="radio" id="highlightDiffBtn" name="highlightWhat" value="diff" checked>
+        <label for="highlightDiffBtn">difference </label>
+        <input type="radio" id="highlightCommonBtn" name="highlightWhat" value="common">
+        <label for="highlightCommonBtn">common text</label>
+        <br>
+        <input type="checkbox" id="cleanCheck" name="cleanCheck" checked>
+        <label for="cleanCheck">remove OpenITI tags from texts</label>
+        <br>
+        <input type="checkbox" id="punctCheck" name="punctCheck" checked>
+        <label for="punctCheck">remove punctuation</label>
+        <br>
+        <label for="normalizeAlifs">Normalize: </label>
+        <input type="checkbox" id="normalizeAlifCheck" name="normalizeAlifCheck" checked>
+        <label for="normalizeAlif">Alifs (أ = ا = إ = آ) </label>
+        <input type="checkbox" id="normalizeYaCheck" name="normalizeYaCheck" checked>
+        <label for="normalizeFinalYa">alif maqṣūra / final yā' (ي = ى) </label>
+        <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck" checked>
+        <label for="normalizeFinalHa">tā marbūṭa / final hā' (ة = ه)</label>
+        <br>
+        <label for="fontSizeInput">Font size: </label>
+        <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="20">
+        <label for="fontSizeInput">px</label>
+        <br>
+        <br>
+        <label for="imgWidthInput">Image size: width: </label>
+        <input type="text" class="num-input" id="imgWidthInput" name="imgWidthInput" value="200">
+        <!--<label for="imgHeightInput">mm; height: </label>
+        <input type="text" class="num-input" id="imgHeightInput" name="imgHeightInput" value="">-->
+        <label for="imgDpiInput">mm; dpi: </label>
+        <input type="text" class="num-input" id="imgDpiInput" name="imgDpiInput" value="300">
+        <br>
+        <label for="ngramInput">Refine the results using shingled character</label>
+        <input type="text" class="num-input" id="ngramInput" name="ngramInput" value="3" checked>
+        <label for="ngramInput">-grams</label>
+        <br>
+        <input type="checkbox" id="rowsCheck" name="rowsCheck">
+        <label for="rowsCheck">
+          divide the output into lines for easier reading (min.
+          <input type="text" class="num-input" id="arCharInput" name="arCharInput" value="20">
+          shared characters per line)
+        </label>
+        <br>
+        <input type="checkbox" id="singleDivCheck" name="singleDivCheck">
+        <label for="singleDivCheck">Display the diff in a single composite text (wikipedia-style)</label>
+      </div>
+    </div>
+    
+    <div id="inputDiv">
+        <textarea id="inputA"></textarea>
+        <textarea id="inputB"></textarea>
+    </div>
+    
+    <div id="outputDiv">
+      <!--<div style="display: inline-block; margin: 0 auto; text-align: center;">
+        <span class="chevron top"></span>
+      </div>-->
+      <div class="resize-container">
+        <!--
+        <div class="milestoneLocatorA">
+          <div class="milestoneLocatorLineA"></div>
+        </div>-->
+        <div class="container">
+          <table id="outputTable"></table>
+        </div>
+        <!--
+        <div class="milestoneLocatorB">
+          <div class="milestoneLocatorLineB"></div>
+        </div>-->
+      </div>
+      <div id="outputSingleDiv">
+        <p>Original inline wikEdDiff output:</p>
+        <div id="cDiff"></div>
+      </div>
+      <!--<span class="chevron bottom"></span>-->
+    </div>
+    
+    <div id="pagination">
+      <input type="button" id="prevPage" value="Previous">
+      <label for="currentPageInput">Page </label>
+      <input type="text" class="num-input" id="currentPageInput" name="currentPageInput">
+      <label for="currentPageInput"> of </label>
+      <span id="lastPageSpan"></span>
+      <input type="button" id="nextPage" value="Next">
+      <input type="button" id="downloadAllPngBtn" value="Download all as png">
+      <input type="button" id="downloadAllSvgBtn" value="Download all as svg">
+    </div>
+    
+    <div class="modal" id="uploadModal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>Choose a passim alignment file (srt, csv) to display:</p>
+        <input type="file" name="inputfileButton" id="inputfileButton" accept=".csv, .tsv, .srt">
+        <div id="selectRowsControls">
+          <input type="button" id="loadSelectedRows" value="Load selected rows">
+          <input type="button" id="selectAllRows" value="Select all">
+          <input type="button" id="deselectAllRows" value="Deselect all">
+          <label for="rowFilter">Filter rows: only include rows containing: </label>
+          <input type="text" name="rowFilter" id="rowFilter" value="">
+        </div>
+        <div id="selectRows">
+          <table id="csvTable"></table>
+        </div>
+      </div>
+    </div>
+    
+    <div id="svgDataUrl" style="display: none"></div>
+    <div id="pngDataUrl" style="display: none"></div>
+    <canvas id="myCanvas"></canvas>
+  </main>
 
 </body>
 </html>
