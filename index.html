@@ -65,6 +65,26 @@
   }
   body {
     font-family: 'Roboto', sans-serif;
+    margin: 0;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px 20px;
+        box-shadow: -1px 10px 21px 0px rgba(99,151,255,0.1);
+        -webkit-box-shadow: -1px 10px 21px 0px rgba(99,151,255,0.1);
+        -moz-box-shadow: -1px 10px 21px 0px rgba(99,151,255,0.1);
+  }
+  header > section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header > section > span {
+    font-weight: bolder;
+    font-size: 24px;
   }
   #outputIntro {
     display: none;
@@ -184,7 +204,6 @@
   #cDiff {
     font-size: var(--ar-chars-font-size);
     font-family: "Amiri", sans-serif;
-    //margin: 0 auto;
     margin-top: 10;
     display: none;
     direction: rtl;
@@ -311,13 +330,17 @@
 </head>
 
 <body>
-<span style="float: right;">view code on <a href="https://github.com/pverkind/diffViewer" target="_blank">GitHub</a></span>
-<h1>
-  <a href="https://kitab-project.org/data/apps" style="text-decoration:none; padding-left:10px; padding-right:20px; padding-top:20px">
-    <img src="img/logo-small-2-no-padding.svg" height="50">
-  </a>
-  Diff viewer
-</h1>
+  <header>
+    <section>
+      <a href="https://kitab-project.org/data/apps">
+        <img src="img/logo-small-2-no-padding.svg" height="40">
+      </a>
+      <span>Diff Viewer</span>
+    </section>
+    <span><a href="https://github.com/pverkind/diffViewer" target="_blank">
+      <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" height="30" alt="github-code"/> 
+    </a></span>
+  </header>
 
 <div id="inputIntro">
   <p>Paste the two strings you want to compare in the fields below (or <a id="loadExample" href="#">load an example</a>) and click the display button.</p>
