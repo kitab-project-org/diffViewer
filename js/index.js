@@ -53,6 +53,14 @@ var inputB = `# (15)
 /*var inputA = "الي النهروان يوم السبت فاقام به ثمانية ايام"
 var inputB = "الي النهروان وذلك يوم السبت فاقام فيه ثمانية ايام"*/
 
+// test with example of displaced elements that are insterted in the wrong location:
+
+/*var inputA = `وحزرت هذا الكتاب بعد
+تأليفي لغالبه وترتيب ما بقي منه بذهني أن يكون أربع مجلدات كبار فاستطلته
+وشرعت في اختصاره وحزرت أن يكون نحو نصف أصله`
+var inputB = `ثم إني استطلته بعد تسويدي لأكثره وترتيب ما بقي منه بذهني فاختصرته في مقدار نصف الحجم وسمّيت هذا المختصر`
+*/
+
 // initialize global variables:
 
 var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
@@ -63,7 +71,7 @@ normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
-var VERBOSE = false;
+var VERBOSE = true;
 var inputData = [];
 var currentPage = 0;
 //var imgHeight = 0;
@@ -158,6 +166,9 @@ window.addEventListener('load', function() {
   svgBtn.addEventListener("click", downloadSvg);
   pngBtn = document.getElementById("pngButton");
   pngBtn.addEventListener("click", downloadPng);
+  tiffBtn = document.getElementById("tiffButton");
+  tiffBtn.addEventListener("click", downloadTiff);
+
 
   resetButton = document.getElementById("resetButton");
   resetButton.addEventListener("click", resetOptions);
@@ -229,6 +240,9 @@ window.addEventListener('resize', function(){
 
 //////////////////  Helper functions called by buttons ///////////////////////
 
+/**
+ * Move to previous diff (in batch mode)
+ */
 function prevPage(){
   if (currentPage === 0){
     currentPage = Math.ceil((inputData.length - 1)/2)-1;
@@ -238,6 +252,9 @@ function prevPage(){
   currentPageInp.value = currentPage+1;
   calcDiff();
 }
+/**
+ * Move to next diff (in batch mode)
+ */
 function nextPage(){
   if (currentPage+1 === Math.ceil((inputData.length - 1)/2)){
     currentPage = 0;
@@ -247,12 +264,16 @@ function nextPage(){
   currentPageInp.value = currentPage+1;
   calcDiff();
 }
-
+/**
+ * Move to specific diff (in batch mode)
+ */
 function jumpToPage(){
   currentPage = parseInt(currentPageInp.value)-1;
   calcDiff();
 }
-
+/**
+ * Load both texts from text input
+ */
 function loadFromTextArea(){
   let a = document.getElementById("inputA").value;
   let b = document.getElementById("inputB").value;
@@ -270,25 +291,38 @@ function loadFromTextArea(){
   calcDiff();
   paginationDiv.style.display = "none";
 }
-
+/**
+ * Calculate the diff if the output pane is not hidden
+ */
 function calcDiffIfVisible(){
   if (outputDiv.style.display === "block"){
     calcDiff();
   }
 }
 
+/**
+ * Load sample texts into the text inputs
+ */
 function loadExample(){
   document.getElementById("inputA").value = inputA;
   document.getElementById("inputB").value = inputB;
 }
-
+/**
+ * Clear both text inputs
+ */
 function clear(){
   document.getElementById("inputA").value = "";
   document.getElementById("inputB").value = "";
 }
 
+/**
+ * Parse uploaded csv file
+ * @param {String} r text string loaded from csv/tsv file 
+ * @return {Array}   csv parsed as array
+ */
 function parseCSV(r){
   let csvArray = [];
+  // Find out whether the input file is csv or tsv:
   let tabs = (r.match(/\t/g) || []).length;
   let commas = (r.match(/,/g) || []).length;
   //console.log("tabs: "+tabs, "commas: "+commas);
@@ -297,6 +331,7 @@ function parseCSV(r){
   } else {
     var csvSeparator = new RegExp(",", "g");
   }
+  // Parse the csv/tsv file using the relevant delimiter:
   r.trim().split(/[\r\n]+/g).forEach(function(row){
     let rowArray = [];
     //row.split(/[,\t]/g).forEach(function(cell){
@@ -309,6 +344,9 @@ function parseCSV(r){
   return csvArray;
 }
 
+/**
+ * Display input csv file as html so that user can select relevant rows
+ */
 function displayCSV(){
   var rowFilter = new RegExp(rowFilterInp.value, "g");
   csvTable.innerHTML = "";
@@ -331,7 +369,6 @@ function displayCSV(){
   csvTable.appendChild(headerRow);
 
   // create data rows:
-  //csvArray.forEach(function(rowData){
   for (let rowno=0; rowno < csvArray.length; rowno++){
     rowData = csvArray[rowno];
     var filterStr = ""
@@ -344,7 +381,6 @@ function displayCSV(){
     cell.appendChild(inp);
     row.appendChild(cell);
     // add relevant columns:
-    //relevCols.forEach(function(i){
     for (let i=0; i < relevCols.length; i++){
       col_offset = relevCols[i];
       let cell = document.createElement("td");
@@ -357,7 +393,6 @@ function displayCSV(){
       }
       filterStr += cell.textContent + "\n";
       row.appendChild(cell);
-    //});
     }
     if (rowFilter){
       if (filterStr.match(rowFilter)){
@@ -366,11 +401,13 @@ function displayCSV(){
     } else {
       csvTable.appendChild(row);
     }
-    //csvArray[rowno] = [];  // attempt to limit memory use
-  //});
   }
 }
 
+
+/**
+ * Upload csv file with input strings
+ */
 function loadCSV() {
   console.log("file received");
   selectRowsControls.style.display="block";
@@ -382,6 +419,8 @@ function loadCSV() {
 
     csvArray = parseCSV(fr.result);
     csvHeader = csvArray.shift();
+
+    // define ID column name for different srt data inputs:
     if (csvHeader.includes("idDoc1")){
       var idColName = "idDoc";  // for aggregated data
     } else {
@@ -390,7 +429,7 @@ function loadCSV() {
 
     relevCols = [0,0,0,0];
     for (i in csvHeader){
-      if (csvHeader[i] == idColName+"1"){
+      if (csvHeader[i] == idColName+"1" || csvHeader[i] == idColName){
         relevCols[0] = i;
       } else if (csvHeader[i] == "s1"){
         relevCols[1] = i;
@@ -406,6 +445,9 @@ function loadCSV() {
   fr.readAsText(this.files[0]);
 }
 
+/**
+ * Reset all display options to default
+ */
 function resetOptions(){
   cleanChk.checked = true;
   punctCheck.checked = true;
@@ -422,6 +464,9 @@ function resetOptions(){
   changeFontSize();
 }
 
+/**
+ * Decide to highlight the common or different text
+ */
 function toggleHighlighting(){
   if (highlightDiffBtn.checked){
     document.documentElement.style.setProperty("--bg-col-a", "lightgreen");
@@ -456,6 +501,10 @@ function toggleHighlighting(){
   }
 }
 
+
+/**
+ * Change the font size of the diff text
+ */
 function changeFontSize(){
   let fs = parseInt(fontSizeInp.value);
   if (isNaN(fs)) {
@@ -466,6 +515,10 @@ function changeFontSize(){
   calcDiffIfVisible();
 }
 
+
+/**
+ * Change the width of the output image
+ */
 function changeImgWidth(){
   let w = parseInt(imgWidthInp.value);
   if (!isNaN(w)){
@@ -483,6 +536,9 @@ function changeImgWidth(){
   }
 }*/
 
+/**
+ * Change the image resolution (DPI) of the output image
+ */
 function changeImgDpi(){
   let d = parseInt(imgDpiInp.value);
   //console.log("dpi changed to: "+d);
@@ -495,26 +551,43 @@ function changeImgDpi(){
 }
 
 
-// allow resizing the output container: code from https://jsfiddle.net/RainStudios/mw786v1w/
+// allow resizing the output container: 
+// code from https://jsfiddle.net/RainStudios/mw786v1w/
+
+/**
+ * Make the target element resizable
+ * @param {Event} e event
+ */
 function initResize(e) {
    window.resizeContainer = e.target.parentElement;
    window.addEventListener('mousemove', Resize, false);
    window.addEventListener('mouseup', stopResize, false);
 }
+/**
+ * Change the width of the element
+* @param {Event} e event
+ */
 function Resize(e) {
    if (VERBOSE) {console.log(resizeContainer);}
    if (VERBOSE) {console.log(resizeContainer.style.width);}
    resizeContainer.style.width = (e.clientX - resizeContainer.offsetLeft) + 'px';
    if (VERBOSE) {console.log(resizeContainer.style.width);}
    //resizeCont.style.width = (e.clientX - resizeCont.offsetLeft) + 'px';
-
 }
+/**
+ * Stop resizing the element
+ * @param {Event} e event
+ */
 function stopResize(e) {
     window.removeEventListener('mousemove', Resize, false);
     window.removeEventListener('mouseup', stopResize, false);
     //calcDiffIfVisible();
 }
 
+
+/**
+ * Select all rows in the batch input screen
+ */
 function selectAllRows(){
   let inputs = csvTable.getElementsByTagName("input");
   [...inputs].forEach(function(inp){
@@ -522,6 +595,9 @@ function selectAllRows(){
   });
 }
 
+/**
+ * Deselect all rows in the batch input screen
+ */
 function deselectAllRows(){
   let inputs = csvTable.getElementsByTagName("input");
   [...inputs].forEach(function(inp){
@@ -529,6 +605,9 @@ function deselectAllRows(){
   });
 }
 
+/**
+ * Load all selected rows in the batch input screen
+ */
 function loadSelectedRows(){
   inputData = [];
   let rows = Array.from(csvTable.getElementsByTagName("tr"));
@@ -558,7 +637,11 @@ function loadSelectedRows(){
 ////////////////////// helper functions for main functions /////////////////////
 
 
-// count the number of Arabic characters in a string using OpenITI character regex
+/**
+ * count the number of Arabic characters in a string using OpenITI character regex
+ * @param {String} s input string
+ * @return {Number}  number of characters
+ */
 function charLength(s){
   if (s) {
     return charCount(s, arCharExtRegex);
@@ -567,6 +650,7 @@ function charLength(s){
   }
 }
 
+// NOT USED??
 function getLineOffsets(s){
   var offsets = [];
   for (let i=0; i<s.length; i++){
@@ -577,6 +661,11 @@ function getLineOffsets(s){
   return offsets
 }
 
+/**
+ * Add the calculated diff html strings to the output table
+ * @param {String} aHtml text A with diff html tags
+ * @param {String} bHtml text B with diff html tags
+ */
 function displayDiff(aHtml, bHtml){
   // remove empty tags:
   aHtml = aHtml.replace(/<span class="\w+"><\/span>/g, "");
@@ -584,57 +673,89 @@ function displayDiff(aHtml, bHtml){
   // merge neighboring tags of the same class:
   aHtml = aHtml.replace(/(?<=<span class="(\w+)">)([^<]+)<\/span><span class="\1">/g, '$2');
   bHtml = bHtml.replace(/(?<=<span class="(\w+)">)([^<]+)<\/span><span class="\1">/g, '$2');
+  // Replace line ending placeholders with <br> tags:
+  aHtml = aHtml.replace(/¶/g, "<br>");
+  bHtml = bHtml.replace(/¶/g, "<br>");
+  // add the html to the output:
   let newRow = document.getElementById("outputTable").insertRow(-1);
   let cellA = newRow.insertCell(0);
-  cellA.innerHTML = aHtml.replace(/¶/g, "<br>");
+  cellA.innerHTML = aHtml;
   let cellB = newRow.insertCell(1);
-  cellB.innerHTML = bHtml.replace(/¶/g, "<br>");
+  cellB.innerHTML = bHtml;
   if (VERBOSE) {console.log("row inserted");}
 }
 
+/**
+ * Normalize text by removing tags and confusing characters
+ * @param {String} text input text
+ */
 function cleanText(text){
   if (clean) {
+    // remove carriage returns:
     text = text.replace(/\r/g, "");
+    // remove OpenITI mARkdown structural tags:
     text = text.replace(/### \|+ /g, "");
     text = text.replace(/\n# /g, "\n");
     text = text.replace(/^# /g, "\n");
     text = text.replace(/-+/g, "");
     text = text.replace(/\n+~~/g, " ");
     text = text.replace(/~~/g, "");
+    // remove milestone and page number tags:
     text = text.replace(/[\n ]*ms\d+[\n ]*/g, " ");
     text = text.replace(/[\n ]*PageV[^P]+P\d+[a-bA-B]?[\n ]*/g, " ");
+    // remove footnote markers:
     text = text.replace(/[«\(\[/]\d+[»\)\]/]/g, "");
+    // remove OpenITI mARkdown semantic tags:
     text = text.replace(/@[a-zA-Z@\d]+/g, "");
   }
   if (normalizeAlif){
-    text = text.replace(/[أإآ]/g, "ا");
+    // normalize alif+madda/wasla/hamza to simple alif:
+    text = text.replace(/[أإآٱ]/g, "ا");
   }
   if (normalizeYa){
+    // normalize Persian ya and alif maqsura to Arabic ya:
     text = text.replace(/[یى]/g, "ي");
   }
   if (normalizeHa){
+    // normalize ta marbuta to ha:
     text = text.replace(/ة/g, "ه");
   }
   if (punct) {
+    // remove punctuation:
     text = text.replace(/[.?!:،,’]/g, "")
   }
+  // strip whitespace:
   text = text.replace(/^[\r\n ]+|[\r\n ]+$/g, '');
   return text
 }
 
 
-
-
+/**
+ * Convert millimeters to pixels
+ * @param {Number} mm  measurement in millimeters
+ * @param {Number} dpi desired resolution (dots per inch)
+ */
 function mmToPix(mm, dpi=300){
   return mm * dpi / inch;
 }
 
+/**
+ * Get measurement of an html element in pixels
+ * @param {Node} node            html element
+ * @param {String} styleProperty css style property
+ * @return {Number}              measurement in pixels
+ */
 function px(node, styleProperty) {
   // from dom-to-image.js
   var value = window.getComputedStyle(node).getPropertyValue(styleProperty);
   return parseFloat(value.replace('px', ''));
 }
 
+/**
+ * Get width of an html element in pixels
+ * @param {Node} node            html element
+ * @return {Number}              measurement in pixels
+ */
 function getNodeWidth(node) {
   // from dom-to-image.js
   var leftBorder = px(node, 'border-left-width');
@@ -642,6 +763,11 @@ function getNodeWidth(node) {
   return node.scrollWidth + leftBorder + rightBorder;
 }
 
+/**
+ * Get width of an html element in pixels
+ * @param {Node} node            html element
+ * @return {Number}              measurement in pixels
+ */
 function getNodeHeight(node) {
   // from dom-to-image.js
   var topBorder = px(node, 'border-top-width');
@@ -649,14 +775,22 @@ function getNodeHeight(node) {
   return node.scrollHeight + topBorder + bottomBorder;
 }
 
+/**
+ * Download output table as svg image
+ */
 async function downloadSvg(){
   domtoimage.toSvg(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
     downloadFile(dataUrl, "diff.svg");
   });
 }
 
-async function downloadPng(){
-  // update the values for the image width and dpi:
+
+/**
+ * Download output table as raster image
+ * @param {String} outputType Image type (png, tiff)
+ */
+async function downloadRaster(outputType){
+  // update the values for the image width and dpi from the Options field:
   changeImgWidth();
   changeImgDpi();
 
@@ -667,7 +801,7 @@ async function downloadPng(){
   //if (!imgWidth) {imgWidth = defaultImgWidth;}
   //if (!imgDpi) {imgDpi = defaultImgDpi;}
 
-  // get the width and height of the table, in pixels:
+  // get the current width and height of the table, in pixels:
   let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
   let nodeHeight = getNodeHeight(document.getElementById("outputTable"));
   console.log("Original image size: "+nodeWidth+" x "+nodeHeight+" px");
@@ -701,16 +835,47 @@ async function downloadPng(){
   //}
   if (VERBOSE) {console.log(options);}
 
-  domtoimage.toPng(document.getElementById("outputTable"), options).then(dataUrl => {
-    downloadFile(dataUrl, "diff.png");
-    // reset the font size, divider width and padding:
-    document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
-    document.documentElement.style.setProperty("--col-divider", `solid 1px lightgrey`);
-    document.documentElement.style.setProperty("--col-padding", "10px");
-  });
-  //
+  if (outputType==="png"){
+    console.log("Downloading png file");
+    domtoimage.toPng(document.getElementById("outputTable"), options).then(dataUrl => {
+      downloadFile(dataUrl, "diff.png");
+    });
+  } else if (outputType==="tiff"){
+    // THIS IS NOT CURRENTLY WORKING! Uses https://github.com/motiz88/canvas-to-tiff
+    //   CanvasToTIFF.toObjectURL is not returning anything...
+    console.log("Downloading tiff");
+    CanvasToTIFF.toObjectURL(document.getElementById("outputTable"),
+                           function(dataUrl) {
+                             console.log("Really downloading tiff now");
+                             downloadFile(dataUrl, "diff.tiff");
+                             console.log("Tiff downloaded");
+                           },
+                           options);
+  }
+  // reset the font size, divider width and padding:
+  document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
+  document.documentElement.style.setProperty("--col-divider", `solid 1px lightgrey`);
+  document.documentElement.style.setProperty("--col-padding", "10px");
 }
 
+/**
+ * Download output table as png image
+ */
+async function downloadPng(){
+  downloadRaster("png");
+}
+
+/**
+ * Download output table as tiff image
+ */
+async function downloadTiff(){
+  downloadRaster("tiff");
+}
+
+/**
+ * Download all output tables  as image files (in batch mode)
+ * @param {String} fileType type of output image file (png, svg, tiff)
+ */
 async function downloadAll(fileType){
   var lastPage = parseInt(lastPageSpan.textContent);
   for (let i=0; i < lastPage; i++){
@@ -724,33 +889,33 @@ async function downloadAll(fileType){
       await downloadSvg();
       console.log('wait one second');
       await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+    } else if (fileType === "tiff") {
+      await downloadTiff();
+      console.log('wait one second');
+      await new Promise((resolve, reject) => setTimeout(resolve, 1000));
     }
   }
-
-  /*(function(next){
-    for (let i=0; i < lastPage; i++){
-      currentPage = i;
-      console.log(currentPage);
-      calcDiff();
-      next();
-    }
-  }(function (){
-    if (fileType === "png"){
-      downloadPng();
-    } else if (fileType === "svg") {
-      downloadSvg();
-    }
-  }));*/
 }
 
+/**
+ * Download all output tables  as png images (in batch mode)
+ */
 async function downloadAllPng(){
   downloadAll("png");
 }
 
+/**
+ * Download all output tables  as svg images (in batch mode)
+ */
 async function downloadAllSvg(){
   downloadAll("svg");
 }
 
+/**
+ * Download image data url as file
+ * @param {String} dataUrl image encoded as data url
+ * @param {String} fn      filename of the output image file 
+ */
 function downloadFile(dataUrl, fn){
   let link = document.createElement("a");
   link.download = fn;
@@ -761,7 +926,12 @@ function downloadFile(dataUrl, fn){
   delete link;
 }
 
-
+/**
+ * Convert string into array of overlapping n-grams
+ * @param {String} s input string
+ * @param {Number} n number of tokens in each n-gram
+ * @return {Array}   array of ngrams
+ */
 function shingle(s, n){
   if (s.length<n) {
     return [];
@@ -931,16 +1101,16 @@ function shingle(s, n){
   return [aHtml, bHtml];
 }*/
 
-/*
-  * Mark up the Heckel array `toksArr` and add it to the `xHtml string`.
-
-  * @param {array} toks: shingled n-gram tokens of the string to be refined.
-  * @param {array} toksArr: contains for each n-gram token, its index position in the other Heckel array, or the token itself if it was not found in the other array.
-  * @param {array} otherArr: contains for each n-gram token in the other string, its index position in the other Heckel array, or the token itself if it was not found in the other array.
-  * @param {string} xHtml: html string to which the marked up string should be appended.
-  * @param {number} n: n-gram class
-  * @param {string} spanClass: name of the class ("added" / "removed") of the spans to which the parts of the string that differ from the other should be added.
-*/
+/**
+ * Mark up the Heckel array `toksArr` and add it to the `xHtml string`.
+ * @param {Array} toks:       shingled n-gram tokens of the string to be refined.
+ * @param {Array} toksArr:    contains for each n-gram token, its index position in the other Heckel array, or the token itself if it was not found in the other array.
+ * @param {Array} otherArr:   contains for each n-gram token in the other string, its index position in the other Heckel array, or the token itself if it was not found in the other array.
+ * @param {String} xHtml:     html string to which the marked up string should be appended.
+ * @param {Number} n:         n-gram class
+ * @param {String} spanClass: name of the class ("added" / "removed") of the spans to which the parts of the string that differ from the other should be added.
+ * @return {String}           xHtml string to which the new tokens are appended
+ */
 function markupHeckelArray(toks, toksArr, otherArr, xHtml, n, spanClass){
   let inDiff = false;
   let inCommon = false;
@@ -1027,19 +1197,23 @@ function markupHeckelArray(toks, toksArr, otherArr, xHtml, n, spanClass){
   return xHtml;
 }
 
-/*
+/**
  * Partial implementation of the algorithm described in Heckel 1978, pp. 265f.:
  * in this implementation a list of tokens (can be words, lines, ngrams, ...)
  * is provided for the old (O) and new (N) strings.
  * Moved clusters are not implemented here because they seem unnecessary for post-processing.
+ * @param {Array} O Array of tokens for the old string
+ * @param {Array} N Array of tokens for the new string 
+ * @return {Array}  Array of Arrays (one for the old string, one for the new)
  */
-
 function heckel(O, N){
+  var ST = new Object();    // symbol table
+  var OArr = new Array();   // array of Old string
+  var NArr = new Array();   // array of New string
+
+  // add "START" and "END" markers to both arrays:
   O = ["START", ...O, "END"];
   N = ["START", ...N, "END"];
-  var ST = new Object();  // symbol table
-  var OArr = new Array();   // array of Old string
-  var NArr = new Array();  // array of New string
 
   // STEP1: count the number of times each token is in the new string N:
   // populating the NArr array and the NC (new count) value in the symbol table ST:
@@ -1129,8 +1303,16 @@ function heckel(O, N){
 }
 
 
-// refine the output of the algorithm by using shingled n-grams on
-// last added and deleted section
+/**
+ * refine the output of the WikEdDiff algorithm by using shingled n-grams on
+ * last added and deleted section
+ * @param {Array} O          Array of tokens for the old string
+ * @param {Array} N          Array of tokens for the new string
+ * @param {String} aHtml     text A with diff html tags
+ * @param {String} bHtml     text B with diff html tags
+ * @param {String} nextChars text content of the following html element
+ * @return {Array}           Array containing 2 html strings (aHtml and bHtml)
+ */
 function refine(O, N, aHtml, bHtml, nextChars){
   //console.log("O: '"+O+"'");
   //console.log("N: '"+N+"'");
@@ -1183,39 +1365,53 @@ function refine(O, N, aHtml, bHtml, nextChars){
   return [aHtml, bHtml];
 }
 
-// parse the wikiEdDiff html into two separate strings
+/** 
+ * parse the wikiEdDiff html into two separate strings and display them
+ * @param {String} diffHtml output of the wikEdDiff algorithm
+ */
 function parseDiffHtml(diffHtml){
-  //document.getElementsByClassName("container")[0].innerHTML = "";
-  var parser = new DOMParser();
-  var wikiHtml = parser.parseFromString(diffHtml, "text/html");
-  if (VERBOSE) {console.log(wikiHtml);}
-  var rootNode = wikiHtml.getElementsByTagName("pre")[0]
-  if (VERBOSE) {console.log(rootNode);}
   var aHtml = "";
   var bHtml = "";
   let pos = 0;
   let pos_changes = {"Old" : "", "New" : ""};
 
+  // Parse the html string and find its root node:
+  var parser = new DOMParser();
+  var wikiHtml = parser.parseFromString(diffHtml, "text/html");
+  if (VERBOSE) {console.log(wikiHtml);}
+  var rootNode = wikiHtml.getElementsByTagName("pre")[0]
+  if (VERBOSE) {console.log(rootNode);}
+
+  // loop through all the child nodes 
+  // and add their text content to text A and/or text B
+  // depending on the :
   for (var i = 0; i < rootNode.childNodes.length; i++) {
     var c = rootNode.childNodes[i];
 
     if (VERBOSE) {console.log(c);}
-    if (c.nodeType === Node.TEXT_NODE){
+    if (c.nodeType === Node.TEXT_NODE){  
+      // unmarked text => substring present in both A and B
+
       if (VERBOSE) {console.log("UNMARKED: COMMON TEXT "+c.textContent);}
-      //if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS) && aHtml.substring(aHtml.length-2, aHtml.length-1) != " " && bHtml.substring(bHtml.length-2, bHtml.length-1) != " "){
-        //displayDiff(aHtml, bHtml);
 
-      [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
-      //aHtml += '<span class="removed">'+ pos_changes["Old"] +'</span>';
-      //bHtml += '<span class="added">'+ pos_changes["New"] +'</span>';
-
+      // finalize the changes recorded in the pos_changes dictionary:
+      // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
       if (VERBOSE) {console.log(pos_changes);}
+      [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
+
+      // reset the pos_changes dictionary:
       pos_changes = {"Old" : "", "New" : ""};
+
+      // add the common text to both xHtml strings:
       aHtml += '<span class="common">' + c.textContent + '</span>';
       bHtml += '<span class="common">' + c.textContent + '</span>';
-    } else if (c.classList.contains("wikEdDiffInsert")) {
+
+    } else if (c.classList.contains("wikEdDiffInsert")) { 
+      // => substring only present in text B ("Inserted" in B)
+
       if (VERBOSE) {console.log("MARK IN B (INSERTION)");}
-      //pos_changes["New"] += c.textContent;
+
+      // Add the text content of all child nodes to the list of changes in the new text (text B):
       var children = Array.from(c.childNodes);
       children.forEach(function(child){
         if (child.classList && child.classList.contains("wikEdDiffNewline")){
@@ -1225,13 +1421,12 @@ function parseDiffHtml(diffHtml){
         }
       });
 
-      //bHtml += '<span class="added">'+c.textContent+'</span>';
-      /*if (c.querySelector(".wikEdDiffNewline") != null){
-        bHtml += "<br>"
-      }*/
-    } else if (c.classList.contains("wikEdDiffDelete")) {
+    } else if (c.classList.contains("wikEdDiffDelete")) {  
+      // =>  substring only present in text A ("Deleted" in B)
+
       if (VERBOSE) {console.log("MARK IN A (DELETION) "+c.textContent);}
-      //pos_changes["Old"] += c.textContent;
+
+      // Add the text content of all child nodes to the list of changes in the old text (text A):
       var children = Array.from(c.childNodes);
       children.forEach(function(child){
         if (child.classList && child.classList.contains("wikEdDiffNewline")){
@@ -1241,50 +1436,43 @@ function parseDiffHtml(diffHtml){
         }
       });
 
-      //aHtml += '<span class="removed">'+c.textContent+'</span>';
-      /*if (c.querySelector(".wikEdDiffNewline") != null){
-        aHtml += "<br>"
-      }*/
-    } else if (c.classList.contains("wikEdDiffBlock")) {
+    } else if (c.classList.contains("wikEdDiffBlock")) {  
+      // =>  position in text B of a text block that is in both texts but in a different location
+
       if (VERBOSE) {console.log("MOVED, B "+c.textContent);}
+
       if (c.textContent.length > 1){
-        //[aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml);
-        //pos_changes = {"Old" : "", "New" : ""};
+        // finalize the changes recorded in the pos_changes dictionary:
+        // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
+        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
+        // reset the pos_changes dictionary:
+        pos_changes = {"Old" : "", "New" : ""};
         bHtml += '<span class="moved">'+c.textContent+'</span>';
-      } else {
-        //bHtml += '<span class="added">'+c.textContent+'</span>';
-        pos_changes["New"] += c.textContent;
       }
-    } else if (c.classList.contains("wikEdDiffMarkLeft")) {
+
+    } else if (c.classList.contains("wikEdDiffMarkRight") || c.classList.contains("wikEdDiffMarkLeft")) { 
+      // =>  position in text A of a text block that is in both texts but in a different location
+
       if (VERBOSE) {console.log("MOVED, A "+c.getAttribute('title'));}
-      if (c.getAttribute('title').length > 1){
-        //[aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, nextChars);
-        //pos_changes = {"Old" : "", "New" : ""};
+      
+      // in this case, the text content is not enclosed as a child in the node 
+      // but in the title attribute of the node:
+      if (c.getAttribute('title').length > 1){ 
+        // finalize the changes recorded in the pos_changes dictionary:
+        // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
+        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.getAttribute('title'));
+        // reset the pos_changes dictionary:
+        pos_changes = {"Old" : "", "New" : ""};
         aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
-      } else {
-        //aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
-        pos_changes["Old"] += c.getAttribute('title');
-      }
-    } else if (c.classList.contains("wikEdDiffMarkRight")) {
-      if (VERBOSE) {console.log("MOVED, A "+c.getAttribute('title'));}
-      if (c.getAttribute('title').length > 1){
-        //[aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, nextChars);
-        //pos_changes = {"Old" : "", "New" : ""};
-        aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
-      } else {
-        //aHtml += '<span class="removed">'+c.getAttribute('title')+'</span>';
-        pos_changes["Old"] += c.getAttribute('title');
       }
     }
   }
-  //console.log("pos_changes at end:");
-  //console.log(pos_changes);
+
+  // add the remaining changes to the aHtml and bHtml strings:
   [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, " ");
-  //aHtml += '<span class="removed">'+ pos_changes["Old"] +'</span>';
-  //bHtml += '<span class="added">'+ pos_changes["New"] +'</span>';
 
 
-  // display the difs:
+  // display the diffs in the output elements:
   displayDiff(aHtml, bHtml);
   document.getElementById("cDiff").innerHTML = diffHtml;
   if (singleDiv){
@@ -1349,6 +1537,9 @@ function parseDiffHtml(diffHtml){
 
 }
 
+/** 
+ * Calculate the diff between two input texts
+ */
 async function calcDiff() {
   // empty the existing output table:
   document.getElementById("outputTable").innerHTML = "";
@@ -1367,7 +1558,7 @@ async function calcDiff() {
   //update the image width and font size from the options:
   changeImgWidth();
 
-  //console.log("currentPage: "+currentPage);
+  // Enable both batch display and single pair display:
   if (inputData.length === 1){
     var toBeDisplayed = [["", ""], inputData[currentPage]];
   } else {
@@ -1379,10 +1570,9 @@ async function calcDiff() {
     if (i%2 !== 0){
       // clean both strings:
       a = cleanText(a);
-      //console.log(a);
       b = cleanText(b);
 
-      // create the diff:
+      // create the diff using the WikEdDiff algorithm:
       var wikEdDiff = new WikEdDiff();
       // experiment with special regexes for Arabic words and characters:
       //wikEdDiff.config.regExp.split.word = arTokExtRegex;
@@ -1390,6 +1580,8 @@ async function calcDiff() {
       //wikEdDiff.config.regExp.split.character = arCharExtRegex;
       var diffHtml =  wikEdDiff.diff(a, b);
       if (VERBOSE) {console.log(diffHtml);}
+
+      // split the output of the WikEdDiff algorithm into two separate html strings:
       parseDiffHtml(diffHtml);
     } else { //
       displayDiff(a, b);
