@@ -11,13 +11,13 @@ Usage:
 import { kitabDiff} from "./kitabDiff.js"
 
 // simple: create two html strings detailing the differences between two strings 
-[wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, refine_n=3);
+let [wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, refine_n=3);
 // NB: wikEdDiffHtml is the original (single-string) output of the WikEdDiff algorithm;
 // aHtml and bHtml are versions of the input strings in which differences are marked with HTML tags
 
 
 // advanced: split aHtml and bHtml into rows for better readability:
-[wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, intoRows=true, arChars=20, refine_n=3);
+let [wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, intoRows=true, arChars=20, refine_n=3);
 // NB: arChars defines how many Arabic characters the two strings must have in common
 //     before a line of text can be broken into two rows.
 let aHtmlSplit = aHtml.split("###NEW_ROW###");
