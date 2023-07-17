@@ -343,31 +343,15 @@ function refine(O, N, aHtml, bHtml, nextChars, intoRows, arChars, refine_n){
   
     var aHtmlStripped = aHtml.replace(/<[^>]+>/g, "");
     var bHtmlStripped = bHtml.replace(/<[^>]+>/g, "");
-    //console.log("aHtml: "+aHtml);
-    //console.log("aHtmlStripped: "+aHtmlStripped);
     var aLastChar = aHtmlStripped.substring(aHtmlStripped.length-1);
     var bLastChar = bHtmlStripped.substring(bHtmlStripped.length-1);
-  
-    /*
-    console.log("aLastChar: '"+aLastChar+"'; bLastChar: '"+bLastChar+"'");
-    var aLastChars = aHtmlStripped.substring(aHtmlStripped.length-5);
-    var bLastChars = bHtmlStripped.substring(bHtmlStripped.length-5);
-    console.log("aLastChars: '"+aLastChars+"'; bLastChars: '"+bLastChars+"'");
-    console.log("nextChar: '"+nextChars[0]+"'");
-    console.log("more than ARCHARS: "+(charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS));
-    console.log('nextChars[0] === " ": '+(nextChars && nextChars[0] === " "));
-    console.log('aLastChar === " ": '+(aLastChar === " "));
-    console.log('bLastChar === " ": '+(bLastChar === " "));*/
-  
+
     // Add a splitter to make comparing texts easier:
     if (intoRows && (countArChars(aHtml) > arChars || countArChars(bHtml) > arChars)
         //&& aHtml.substring(aHtml.length-2, aHtml.length-1) != " "
         //&& bHtml.substring(bHtml.length-2, bHtml.length-1) != " "
         && ((nextChars && nextChars[0] === " ") || (aLastChar === " " && bLastChar === " " ))){
       //console.log("=>NEW ROW!");
-      //displayDiff(aHtml, bHtml);
-      //aHtml = "";
-      //bHtml = "";
       aHtml += "###NEW_ROW###";  // aHtml string can be split later and each section put into a new row in a table
       bHtml += "###NEW_ROW###";  // bHtml string can be split later and each section put into a new row in a table
     }

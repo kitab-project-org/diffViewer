@@ -1,5 +1,9 @@
 /*
 Use the kitabDiff algorithm (js/kitabDiff.js) to display a diff of two text fragments.
+
+TO DO: 
+* fix the tiff download
+* find out why the svg download is sometimes very big
 */
 
 import { kitabDiff } from "./kitabDiff.js";
@@ -100,12 +104,7 @@ window.addEventListener('load', function() {
   resizer.setAttribute("onmouseover", "this.style.background='lightgrey'");
   resizer.setAttribute("onmouseout", "this.style.background='white'");
   resizeCont.appendChild(resizer);
-  //var resizer = document.getElementsByClassName("resizer")[0];
   resizer.addEventListener('mousedown', initResize, false);
-  /*resizer.addEventListener('hover', function(){
-    resizer.style.color = "lightgrey";
-  })*/
-  //resizer.setAttribute("onhover", "this.style.color='lightgrey'");
 
   loadFromTextareaBtn = document.getElementById("calcDiffButton");
   loadFromTextareaBtn.addEventListener("click", loadFromTextArea);
@@ -172,8 +171,6 @@ window.addEventListener('load', function() {
   document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
   imgWidthInp = document.getElementById("imgWidthInput");
   imgWidthInp.addEventListener("change",  changeImgWidth);
-  //imgHeightInp = document.getElementById("imgHeightInput");
-  //imgHeightInp.addEventListener("change",  changeImgHeight);
   imgDpiInp = document.getElementById("imgDpiInput");
   imgDpiInp.addEventListener("change",  changeImgDpi);
   arCharInp = document.getElementById("arCharInput");
@@ -516,13 +513,6 @@ function changeImgWidth(){
   console.log("Image width changed to "+imgWidth);
 }
 
-/*function changeImgHeight(){
-  let h = parseInt(imgHeightInp.value);
-  if (!isNaN(h)){
-    imgHeight = h;
-  }
-}*/
-
 /**
  * Change the image resolution (DPI) of the output image
  */
@@ -550,6 +540,7 @@ function initResize(e) {
    window.addEventListener('mousemove', Resize, false);
    window.addEventListener('mouseup', stopResize, false);
 }
+
 /**
  * Change the width of the element
 * @param {Event} e event
@@ -561,6 +552,7 @@ function Resize(e) {
    if (VERBOSE) {console.log(resizeContainer.style.width);}
    //resizeCont.style.width = (e.clientX - resizeCont.offsetLeft) + 'px';
 }
+
 /**
  * Stop resizing the element
  * @param {Event} e event
@@ -624,38 +616,29 @@ function loadSelectedRows(){
 ////////////////////// helper functions for main functions /////////////////////
 
 
-
-
-// NOT USED??
-function getLineOffsets(s){
-  var offsets = [];
-  for (let i=0; i<s.length; i++){
-    if (s[i] === "\n"){
-      offsets.push(i);
-    }
-  }
-  return offsets
-}
-
-
-
 /**
  * Add the calculated diff html strings to the output table
+ * NB: the splitter "###NEW_ROW###" is sometimes inserted 
+ * to allow splitting the diff into fragments that are easier to compare;
+ * these will be displayed in separate table rows. 
+ *  
  * @param {String} aHtml text A with diff html tags
  * @param {String} bHtml text B with diff html tags
  */
 function displayDiff(aHtml, bHtml){
+  // split the html strings on the splitter into fragments:
   let aHtmlSplit = aHtml.split("###NEW_ROW###");
   let bHtmlSplit = bHtml.split("###NEW_ROW###");
+  // display each fragment in separate table rows for easier comparison: 
   for (let i=0; i<aHtmlSplit.length; i++) {
     let a = aHtmlSplit[i];
     let b = bHtmlSplit[i];
     // add the html to the output:
     let newRow = document.getElementById("outputTable").insertRow(-1);
     let cellA = newRow.insertCell(0);
-    cellA.innerHTML = a; //aHtml;
+    cellA.innerHTML = a; 
     let cellB = newRow.insertCell(1);
-    cellB.innerHTML = b; //bHtml;
+    cellB.innerHTML = b; 
     if (VERBOSE) {console.log("row inserted");}
   }
 }
@@ -803,11 +786,7 @@ async function downloadRaster(outputType){
   document.documentElement.style.setProperty("--col-divider", `solid ${colDivWidth}px lightgrey`);
   let tempPadding = Math.floor(10*q);
   document.documentElement.style.setProperty("--col-padding", `${tempPadding}px`);
-  //} else {
-  //let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
-  //let nodeHeight = getNodeHeight(document.getElementById("outputTable"));
-  //  console.log("image size: "+nodeWidth+" x "+nodeHeight+" px");
-  //}
+  
   if (VERBOSE) {console.log(options);}
 
   if (outputType==="png"){
@@ -905,171 +884,10 @@ function downloadFile(dataUrl, fn){
 
 
 
-//////////////////////// MAIN FUNCTIONS ///////////////////////////////////////
-
-/*function markupHeckelArrays(O, N, OArr, NArr, aHtml, bHtml, n){
-  let inDel = false;
-  let inCommon = false;
-  let usedChars = 0;
-  for (let i=0; i<O.length; i++){
-    var token = O[i];
-    //console.log(i + " token: "+[token]);
-    //console.log("usedChars: "+usedChars);
-    if (typeof OArr[i] === "string") { // no equivalent found in other string N
-      //console.log("= deletion: ")
-      // deal with first characters of first n-gram
-      if (i === 0){
-        let j = 0;
-        let commonChars = "";
-        while (j<n){
-          if (OArr[0][j] === NArr[0][j]) {
-            //bHtml += NArr[0][j];
-            commonChars += OArr[0][j];
-            j++;
-            //usedChars = j;
-          } else {
-            break;
-          }
-        }
-        if (commonChars){
-          aHtml += '<span class="common">'+commonChars+'</span>';
-          usedChars = j;
-        }
-      }
-      if (! inDel) {
-        //console.log("not yet in del section");
-        if (i >= n) {
-          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
-          if (inCommon){
-            aHtml += token.substring(usedChars, n-1)+'</span>';
-            inCommon = false;
-          } else {
-            aHtml += '<span class="common">'+token.substring(usedChars, n-1)+'</span>';
-          }
-          usedChars = n-1;
-        }
-        aHtml += '<span class="removed">' ;
-        inDel = true;
-      }
-      if (usedChars == 0) {
-        //console.log("Adding first character of ngram to tagged deleted section");
-        aHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    } else {
-      //console.log(" = Common words");
-      let j = OArr[i];  // the index of the equivalent token in the other string
-      if (inDel) {
-        aHtml += '</span><span class="common">' ;
-        inDel = false;
-        inCommon = true;
-      }
-      if (! inCommon){
-        aHtml += '<span class="common">' ;
-        inCommon = true;
-      }
-      if (usedChars == 0) {
-        aHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    }
-  }
-  aHtml += token.substring(1+usedChars,n);
-  if (inDel || inCommon) {
-    aHtml += '</span>'
-  }
-
-  let inAdd = false;
-  inCommon = false;
-  usedChars = 0;
-  for (let i=0; i<N.length; i++){
-    var token = N[i];
-    console.log(i + " token: "+[token]);
-    console.log("usedChars: "+usedChars);
-    if (typeof NArr[i] === "string") { // no equivalent found in other string N
-      // deal with first characters of first n-gram
-      if (i === 0){
-        let j = 0;
-        let commonChars = "";
-        while (j<n){
-          if (OArr[0][j] === NArr[0][j]) {
-            //bHtml += NArr[0][j];
-            commonChars += NArr[0][j];
-            j++;
-            //usedChars = j;
-          } else {
-            break;
-          }
-        }
-        if (commonChars){
-          bHtml += '<span class="common">'+commonChars+'</span>';
-          usedChars = j;
-        }
-      }
-      if (! inAdd) {
-        //console.log("not yet in del section");
-        if (i >= n) {
-          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
-          if (inCommon){
-            bHtml += token.substring(usedChars, n-1) + '</span>' ;
-            inCommon = false;
-          } else {
-            bHtml += '<span class="common">'+token.substring(usedChars, n-1)+'</span>';
-          }
-          usedChars = n-1;
-        }
-        bHtml += '<span class="added">' ;
-        inAdd = true;
-      }
-      if (usedChars == 0) {
-        bHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    } else {
-      //console.log(" = Common words");
-      let j = NArr[i];  // the index of the equivalent token in the other string
-
-      if (! inCommon) {
-        //console.log("not yet in del section");
-        if (i > n) {
-          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
-          if (inAdd){
-            bHtml += '</span>' ;
-            inAdd = false;
-          }
-        }
-        if (inAdd){
-          bHtml += '</span>';
-          inAdd = false;
-        }
-        bHtml += '<span class="common">' ;
-        inCommon = true;
-      }
-
-      if (usedChars == 0) {
-        bHtml += token[0];
-      } else {  // characters have already been added to the previous tag!
-        usedChars--;
-      }
-    }
-  }
-  bHtml += token.substring(1+usedChars,n);
-  if (inAdd || inCommon) {
-    bHtml += '</span>'
-  }
-  return [aHtml, bHtml];
-}*/
-
-
-
-
-
+//////////////////////// MAIN FUNCTION ///////////////////////////////////////
 
 /** 
- * Calculate the diff between two input texts
+ * Calculate the diff between two input texts and display it
  */
 async function calcDiff() {
   // empty the existing output table:
@@ -1128,49 +946,7 @@ async function calcDiff() {
       inputDiv.style.display="none";
       inputIntro.style.display="none";
       inputButtons.style.display="none";
-      // create download link:
-      /*
-      // svg approach: does not work well (not whole table, no highlighting)
-      let table = document.getElementById("outputTable").innerHTML;
-      let svg = `<?xml version="1.0" standalone="yes"?>
-    <svg xmlns="http://www.w3.org/2000/svg">
-      <foreignObject x="10" y="10" width="100" height="150">
-        <body xmlns="http://www.w3.org/1999/xhtml">
-          ${table}
-        </body>
-      </foreignObject>
-    </svg>`
-      if (VERBOSE) {console.log(svg);}
-      let href = 'data:text/plain;charset=utf-8,'+svg;
-      */
-      /*
-      // png download using html2canvas: does not work well: parts of text missing!
-      html2canvas(document.getElementById("outputTable")).then(canvas => {
-          let img = canvas.toDataURL("image/png");
-          let href =  img.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
-          let downloadLink = document.getElementById("downloadLink");
-          downloadLink.setAttribute('href', href);
-          downloadLink.setAttribute("download", "diff.png");
-          if (VERBOSE) {console.log(href);}
-      });
-      */
-      // png download using dom-to-image (https://github.com/tsayen/dom-to-image):
-      //domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
-      //    /*let downloadLink = document.getElementById("pngDownloadLink");
-      //    downloadLink.setAttribute('href', dataUrl);
-      //    downloadLink.setAttribute("download", "diff.png");*/
-      //    //console.log(dataUrl);
-      //    let dataUrlHidingPlace = document.getElementById("pngDataUrl");
-      //    dataUrlHidingPlace.innerHTML = dataUrl;
-      //});
-      //domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
-      //    /*let downloadLink = document.getElementById("svgDownloadLink");
-      //    downloadLink.setAttribute('href', dataUrl);
-      //    downloadLink.setAttribute("download", "diff.svg");*/
-      //    //console.log(dataUrl);
-      //    let dataUrlHidingPlace = document.getElementById("svgDataUrl");
-      //    dataUrlHidingPlace.innerHTML = dataUrl;
-      //});
+
     } else { //
       displayDiff(a, b);
     }
