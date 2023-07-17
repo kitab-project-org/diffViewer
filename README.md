@@ -28,29 +28,29 @@ marked as different). The diffViewer adds a refining step of the wikEd
 output to deal with this issue (in the example above, only *wa-* and *fa-* would
 be marked).
 
-## Usage
+## App Usage
 
 There are two basic ways to use the diff viewer:
 
-* You can paste two texts to compare into the two text fields,
-and click the "Display diff" button
-(if you don't have two texts ready, you can also load an example by clicking
-the "example" link in the header);
+  * You can paste two texts to compare into the two text fields,
+    and click the "Display diff" button
+    (if you don't have two texts ready, you can also load an example by clicking
+    the "example" link in the header);
 
-* Alternatively, you can click the "Upload from file" button to upload a passim
-output tsv file.
-  - This will open a popup with a button that allows you to select
-a tsv file from your own computer.
-  - Once loaded (this may take a while for large files), you can select the rows
-  you want to display.
-  - You can use a search filter to select rows: e.g., writing "كتاب" in the
-  filter field and hitting the Enter key will filter out only rows in which at
-  least one of the texts contain the word "kitāb". The filter accepts regular
-  expressions: typing كتا?ب will select rows that contain either *kitāb*
-  or *kutub/kataba/...* . You can also filter on milestone ids (e.g., "ms1\d\d"
-  will select only milestones between 100 and 199).
-  - Once you have selected the rows you are interested in, click the
-  "Load selected rows" button to display the diff for each row.
+  * Alternatively, you can click the "Upload from file" button to upload a passim
+    output tsv file.
+    - This will open a popup with a button that allows you to select
+      a tsv file from your own computer.
+    - Once loaded (this may take a while for large files), you can select the rows
+      you want to display.
+    - You can use a search filter to select rows: e.g., writing "كتاب" in the
+      filter field and hitting the Enter key will filter out only rows in which at
+      least one of the texts contain the word "kitāb". The filter accepts regular
+      expressions: typing كتا?ب will select rows that contain either *kitāb*
+      or *kutub/kataba/...* . You can also filter on milestone ids (e.g., "ms1\d\d"
+      will select only milestones between 100 and 199).
+    - Once you have selected the rows you are interested in, click the
+      "Load selected rows" button to display the diff for each row.
 
 ## Color scheme
 
@@ -121,6 +121,48 @@ the height of the cells was set to a much higher value than necessary.
 The svg output of the `makeSvgDataUri()` function in the `dom-to-image.js` library
 was adapted to manually set the height and of table, tbody, tr and td elements
 to `auto` (setting this in the css was found not to be a solution).
+
+## Importing the javascript library to build your own app
+
+The kitabDiff javascript library can also be used separately to build your own app:
+
+  - Copy the following kitabDiff javascript file and its dependencies into your project folder:
+    * `kitabDiff.js`
+    * `openITI.js`
+    * `wikEdDiff.js`
+  - import the kitabDiff function into your javascript: `import { kitabDiff } from "./kitabDiff.js"`
+  - call the `kitabDiff` function with the two strings you want to compare:
+    ```
+    let [wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, refine_n=3);
+    ```
+    The function returns three strings:
+    * the first contains the raw output from wikEdDiff (a single compound string),
+    * the second contains the text of the first input string with span tags marking deletions/insertions and transpositions
+    * the second contains the text of the second input string with span tags marking deletions/insertions and transpositions
+  - for better readability of the diff, it is possible to split the diff into fragments
+    that can be displayed in parallel; set the `intoRows` parameter to true
+    and define the minimum shared characters before a line can be broken:
+    ```
+    let [wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, intoRows=true, arChars=20, refine_n=3);
+    ```
+    The `aHtml` and `bHtml` strings will now contain a splitter "###NEW_ROW###"
+    that can be used to, for example, display each fragment in a separate table row:
+    ```
+    let aHtmlSplit = aHtml.split("###NEW_ROW###");
+    let bHtmlSplit = bHtml.split("###NEW_ROW###");
+    for (let i=0; i<aHtmlSplit.length; i++) {
+      let a = aHtmlSplit[i];
+      let b = bHtmlSplit[i];
+      // add the html to the output:
+      let newRow = document.getElementById("outputTable").insertRow(-1);
+      let cellA = newRow.insertCell(0);
+      cellA.innerHTML = a; //aHtml;
+      let cellB = newRow.insertCell(1);
+      cellB.innerHTML = b; //bHtml;
+      }
+    }
+    ```
+
 
 ## TO DO:
 
