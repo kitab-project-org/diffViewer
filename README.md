@@ -126,11 +126,14 @@ to `auto` (setting this in the css was found not to be a solution).
 
 The kitabDiff javascript library can also be used separately to build your own app:
 
-  - Copy the following kitabDiff javascript file and its dependencies into your project folder:
+  - Copy the following kitabDiff.js file and its dependencies into your project folder:
     * `kitabDiff.js`
     * `openITI.js`
     * `wikEdDiff.js`
-  - import the kitabDiff function into your javascript: `import { kitabDiff } from "./kitabDiff.js"`
+  - import the `kitabDiff` function into your javascript:
+    ```
+    import { kitabDiff } from "./kitabDiff.js"
+    ```
   - call the `kitabDiff` function with the two strings you want to compare:
     ```
     let [wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, refine_n=3);
@@ -138,10 +141,10 @@ The kitabDiff javascript library can also be used separately to build your own a
     The function returns three strings:
     * the first contains the raw output from wikEdDiff (a single compound string),
     * the second contains the text of the first input string with span tags marking deletions/insertions and transpositions
-    * the second contains the text of the second input string with span tags marking deletions/insertions and transpositions
+    * the third contains the text of the second input string with span tags marking deletions/insertions and transpositions
   - for better readability of the diff, it is possible to split the diff into fragments
-    that can be displayed in parallel; set the `intoRows` parameter to true
-    and define the minimum shared characters before a line can be broken:
+    that can be displayed in parallel; set the `intoRows` parameter to `true`
+    and define the minimum shared Arabic-script characters before a line can be broken (`arChars`):
     ```
     let [wikEdDiffHtml, aHtml, bHtml] = await kitabDiff(strA, strB, intoRows=true, arChars=20, refine_n=3);
     ```
