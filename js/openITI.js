@@ -1,9 +1,11 @@
 /*
-Functions and
+Functions and variables for dealing with Arabic-script texts
 */
 
+export { ARCHARS, noise, arCharsStr, arCharRegex, arTokRegex, arCharsExtStr, arCharExtRegex, arTokExtRegex, tokenize, countWords, countChars};
+
 // define regular expression to define Arabic characters and tokens:
-var arChars = [
+var ARCHARS = [
   "ء	ARABIC LETTER HAMZA",
   "آ	ARABIC LETTER ALEF WITH MADDA ABOVE",
   "أ	ARABIC LETTER ALEF WITH HAMZA ABOVE",
@@ -97,7 +99,7 @@ var noise = [
   "◌ـ   | # Taṭwīl / Kashīda",
 ];
 var arCharsStr = "";
-arChars.forEach(el => arCharsStr += el[0]);
+ARCHARS.forEach(el => arCharsStr += el[0]);
 var arCharRegex = new RegExp("(["+arCharsStr+"])", "g");
 var arTokRegex = new RegExp("(["+arCharsStr+"]+)", "g");
 
@@ -117,7 +119,7 @@ function tokenize(s, tokRegex){
 // count the number of times each token is present in a string
 // using a regex that defines a token:
 
-function wordCount(s, tokRegex){
+function countWords(s, tokRegex){
   return tokenize(s, tokRegex)
     .reduce(
       function(n,r){return n.hasOwnProperty(r)?++n[r]:n[r]=1,n},
@@ -128,7 +130,7 @@ function wordCount(s, tokRegex){
 // count characters in a string using a regex
 // that defines what characters should be considered
 
-function charCount(s, charRegex){
+function countChars(s, charRegex){
    let chars = s.match(charRegex)
    if (chars) {
      return chars.length;

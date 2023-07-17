@@ -12,12 +12,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/fontawesome.min.css" integrity="sha512-xX2rYBFJSj86W54Fyv1de80DWBq7zYLn2z0I9bIhQG+rxIF6XVJUpdGnsNHWRa6AvP89vtFupEPDP8eZAtu9qA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-<script src="js/wikiEdDiff.js"></script>
-<script src="js/openITI.js"></script>
+<script src="js/wikEdDiff.js" type="module"></script>
+<script src="js/openITI.js" type="module"></script>
 <script src="js/html2canvas.min.js"></script>
 <script src="js/dom-to-image.js"></script>
 <script src="js/canvastotiff.js"></script>
-<script src="js/index.js"></script>
+<script src="js/index.js" type="module"></script>
+<script src="js/kitabDiff.js" type="module"></script>
 
 <style>
   :root {
@@ -312,9 +313,9 @@
 </head>
 
 <body>
-<span style="float: right;">view code on <a href="https://github.com/pverkind/diffViewer" target="_blank">GitHub</a></span>
+<span style="float: right;">view code on <a href="https://github.com/kitab-project-org/diffViewer" target="_blank">GitHub</a></span>
 <h1>
-  <a href="https://kitab-project.org/data/apps" style="text-decoration:none; padding-left:10px; padding-right:20px; padding-top:20px">
+  <a href="https://kitab-project.org/data/apps" style="text-decoration:none; padding-left:10px; padding-right:20px; padding-top:20px" target="_blank">
     <img src="img/logo-small-2-no-padding.svg" height="50">
   </a>
   Diff viewer
@@ -373,13 +374,13 @@
     <input type="checkbox" id="punctCheck" name="punctCheck" checked>
     <label for="punctCheck">remove punctuation</label>
     <br>
-    <label for="normalizeAlifs">Normalize: </label>
+    <label for="normalizeAlifCheck">Normalize: </label>
     <input type="checkbox" id="normalizeAlifCheck" name="normalizeAlifCheck" checked>
-    <label for="normalizeAlif">Alifs (أ = ا = إ = آ) </label>
+    <label for="normalizeAlifCheck">Alifs (أ = ا = إ = آ) </label>
     <input type="checkbox" id="normalizeYaCheck" name="normalizeYaCheck" checked>
-    <label for="normalizeFinalYa">alif maqṣūra / final yā' (ي = ى) </label>
+    <label for="normalizeYaCheck">alif maqṣūra / final yā' (ي = ى) </label>
     <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck" checked>
-    <label for="normalizeFinalHa">tā marbūṭa / final hā' (ة = ه)</label>
+    <label for="normalizeHaCheck">tā marbūṭa / final hā' (ة = ه)</label>
     <br>
     <label for="fontSizeInput">Font size: </label>
     <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="20">

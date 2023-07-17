@@ -1,21 +1,8 @@
 /*
-
-Diffcheck implementation based on Wikipedia's diff checking algorithm.
-Wikipedia displays the diff of both texts in a single composite text;
-this tool takes the output of Wikipedia's algorithm and displays it in two
-separate fields.
-
-TO DO:
-* find a way to archive the output
-* further testing + customization
-* implement moved sections in the refine function
-
-See:
-* description of the Wikipedia algorithm: https://en.wikipedia.org/wiki/User:Cacycle/diff
-* online test instance of the Wikipedia diff tool: http://cacycle.altervista.org/wikEd-diff-tool.html
-* javascript code of the Wikipedia diff tool: https://en.wikipedia.org/w/index.php?title=User:Cacycle/diff.js&action=raw&ctype=text/javascript
+Use the kitabDiff algorithm (js/kitabDiff.js) to display a diff of two text fragments.
 */
 
+import { kitabDiff } from "./kitabDiff.js";
 
 ////////////////////////// Initialize //////////////////////////////////////////
 
@@ -64,14 +51,14 @@ var inputB = `ثم إني استطلته بعد تسويدي لأكثره وتر
 // initialize global variables:
 
 var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
-loadFromTextareaBtn, uploadBtn, inputBtn, optionsBtn, svgBtn, pngBtn, resetButton,
+loadFromTextareaBtn, uploadBtn, inputBtn, optionsBtn, svgBtn, pngBtn, tiffBtn, resetButton,
 optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, highlightDiffBtn, highlightCommonBtn, rowsChk, punctCheck, punct,
-ngramInput, refine_n, cleanChk, arCharInp, fontSizeInp, imgWidthInp, imgHeightInp, imgDpiInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
+ngramInput, refine_n, arChars, cleanChk, arCharInp, fontSizeInp, imgWidthInp, imgHeightInp, imgDpiInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
 normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal, closeSpan, inputfileBtn, csvTable, rowFilterInp,
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
-var VERBOSE = true;
+var VERBOSE = false;
 var inputData = [];
 var currentPage = 0;
 //var imgHeight = 0;
@@ -637,18 +624,7 @@ function loadSelectedRows(){
 ////////////////////// helper functions for main functions /////////////////////
 
 
-/**
- * count the number of Arabic characters in a string using OpenITI character regex
- * @param {String} s input string
- * @return {Number}  number of characters
- */
-function charLength(s){
-  if (s) {
-    return charCount(s, arCharExtRegex);
-  } else {
-    return 0;
-  }
-}
+
 
 // NOT USED??
 function getLineOffsets(s){
@@ -661,28 +637,27 @@ function getLineOffsets(s){
   return offsets
 }
 
+
+
 /**
  * Add the calculated diff html strings to the output table
  * @param {String} aHtml text A with diff html tags
  * @param {String} bHtml text B with diff html tags
  */
 function displayDiff(aHtml, bHtml){
-  // remove empty tags:
-  aHtml = aHtml.replace(/<span class="\w+"><\/span>/g, "");
-  bHtml = bHtml.replace(/<span class="\w+"><\/span>/g, "");
-  // merge neighboring tags of the same class:
-  aHtml = aHtml.replace(/(?<=<span class="(\w+)">)([^<]+)<\/span><span class="\1">/g, '$2');
-  bHtml = bHtml.replace(/(?<=<span class="(\w+)">)([^<]+)<\/span><span class="\1">/g, '$2');
-  // Replace line ending placeholders with <br> tags:
-  aHtml = aHtml.replace(/¶/g, "<br>");
-  bHtml = bHtml.replace(/¶/g, "<br>");
-  // add the html to the output:
-  let newRow = document.getElementById("outputTable").insertRow(-1);
-  let cellA = newRow.insertCell(0);
-  cellA.innerHTML = aHtml;
-  let cellB = newRow.insertCell(1);
-  cellB.innerHTML = bHtml;
-  if (VERBOSE) {console.log("row inserted");}
+  let aHtmlSplit = aHtml.split("###NEW_ROW###");
+  let bHtmlSplit = bHtml.split("###NEW_ROW###");
+  for (let i=0; i<aHtmlSplit.length; i++) {
+    let a = aHtmlSplit[i];
+    let b = bHtmlSplit[i];
+    // add the html to the output:
+    let newRow = document.getElementById("outputTable").insertRow(-1);
+    let cellA = newRow.insertCell(0);
+    cellA.innerHTML = a; //aHtml;
+    let cellB = newRow.insertCell(1);
+    cellB.innerHTML = b; //bHtml;
+    if (VERBOSE) {console.log("row inserted");}
+  }
 }
 
 /**
@@ -923,25 +898,12 @@ function downloadFile(dataUrl, fn){
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  delete link;
+  // free up memory by deleting the link after the click:
+  // delete link;  // this does not work in strict mode, see https://webtips.dev/solutions/fix-delete-of-an-unqualified-identifier-errors?utm_content=cmp-true
+  link = null; 
 }
 
-/**
- * Convert string into array of overlapping n-grams
- * @param {String} s input string
- * @param {Number} n number of tokens in each n-gram
- * @return {Array}   array of ngrams
- */
-function shingle(s, n){
-  if (s.length<n) {
-    return [];
-  }
-  let shingles = [];
-  for (let i=0; i<(s.length+1)-n; i++){
-    shingles.push(s.substring(i,i+n));
-  }
-  return shingles;
-}
+
 
 //////////////////////// MAIN FUNCTIONS ///////////////////////////////////////
 
@@ -1101,441 +1063,10 @@ function shingle(s, n){
   return [aHtml, bHtml];
 }*/
 
-/**
- * Mark up the Heckel array `toksArr` and add it to the `xHtml string`.
- * @param {Array} toks:       shingled n-gram tokens of the string to be refined.
- * @param {Array} toksArr:    contains for each n-gram token, its index position in the other Heckel array, or the token itself if it was not found in the other array.
- * @param {Array} otherArr:   contains for each n-gram token in the other string, its index position in the other Heckel array, or the token itself if it was not found in the other array.
- * @param {String} xHtml:     html string to which the marked up string should be appended.
- * @param {Number} n:         n-gram class
- * @param {String} spanClass: name of the class ("added" / "removed") of the spans to which the parts of the string that differ from the other should be added.
- * @return {String}           xHtml string to which the new tokens are appended
- */
-function markupHeckelArray(toks, toksArr, otherArr, xHtml, n, spanClass){
-  let inDiff = false;
-  let inCommon = false;
-  let usedChars = 0;
-
-  for (let i=0; i<toks.length; i++){
-    var token = toks[i];
-    if (VERBOSE) {console.log(i + " token: "+[token]);}
-    if (VERBOSE) {console.log("usedChars: "+usedChars);}
-    if (typeof toksArr[i] === "string") { // no equivalent found in other string N
-      // deal with first characters of first n-gram
-      if (i === 0){
-        let j = 0;
-        let commonChars = "";
-        while (j<n){
-          if (toksArr[0][j] === otherArr[0][j]) {
-            //bHtml += NArr[0][j];
-            commonChars += toksArr[0][j];
-            j++;
-            //usedChars = j;
-          } else {
-            break;
-          }
-        }
-        if (commonChars){
-          xHtml += '<span class="common">'+commonChars+'</span>';
-          usedChars = j;
-        }
-      }
-      if (! inDiff) {
-        //console.log("not yet in del section");
-        if (i >= n-1) {
-          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
-          if (inCommon){
-            xHtml += token.substring(usedChars, n-1) + '</span>' ;
-            inCommon = false;
-          } else {
-            xHtml += '<span class="common">'+token.substring(usedChars, n-1)+'</span>';
-          }
-          usedChars = n-1;
-        }
-        if (inCommon){
-          xHtml += '</span>' ;
-          inCommon = false;
-        }
-        xHtml += '<span class="'+spanClass+'">' ;//'<span class="added">' ;
-        inDiff = true;
-      }
-      if (usedChars == 0) {
-        xHtml += token[0];
-      } else {
-        usedChars--;
-      }
-    } else {
-      //console.log(" = Common words");
-      if (! inCommon) {
-        //console.log("not yet in del section");
-        if (i > n) {
-          //console.log("Adding these character before new tag: "+token.substring(usedChars, n-1))
-          if (inDiff){
-            xHtml += '</span>' ;
-            inDiff = false;
-          }
-        }
-        if (inDiff){
-          xHtml += '</span>';
-          inDiff = false;
-        }
-        xHtml += '<span class="common">' ;
-        inCommon = true;
-      }
-
-      if (usedChars == 0) {
-        xHtml += token[0];
-      } else {  // characters have already been added to the previous tag!
-        usedChars--;
-      }
-    }
-  }
-  xHtml += token.substring(1+usedChars,n);
-  if (inDiff || inCommon) {
-    xHtml += '</span>'
-  }
-  return xHtml;
-}
-
-/**
- * Partial implementation of the algorithm described in Heckel 1978, pp. 265f.:
- * in this implementation a list of tokens (can be words, lines, ngrams, ...)
- * is provided for the old (O) and new (N) strings.
- * Moved clusters are not implemented here because they seem unnecessary for post-processing.
- * @param {Array} O Array of tokens for the old string
- * @param {Array} N Array of tokens for the new string 
- * @return {Array}  Array of Arrays (one for the old string, one for the new)
- */
-function heckel(O, N){
-  var ST = new Object();    // symbol table
-  var OArr = new Array();   // array of Old string
-  var NArr = new Array();   // array of New string
-
-  // add "START" and "END" markers to both arrays:
-  O = ["START", ...O, "END"];
-  N = ["START", ...N, "END"];
-
-  // STEP1: count the number of times each token is in the new string N:
-  // populating the NArr array and the NC (new count) value in the symbol table ST:
-
-  for (let i=0; i<N.length; i++){
-    let token = N[i];
-    NArr.push(token);
-    if (!ST.hasOwnProperty(token)) {
-      ST[token] = {OC: 0, NC: 0, OLNO: null};
-    }
-    ST[token].NC += 1;
-  }
-
-  // STEP2:count the number of times each token is in the old string O:
-  // populating the OArr array and the OC (old count) and OLNO
-  // (old number: offset of the token in the old string)
-  // values in the symbol table ST:
-
-  for (let i=0; i<O.length; i++){
-    let token = O[i];
-    OArr.push(token);
-    if (!ST.hasOwnProperty(token)) {
-      ST[token] = {OC: 0, NC: 0, OLNO: null};
-    }
-    ST[token].OC += 1;
-    ST[token].OLNO = i;
-  }
-
-  // STEP3: identify tokens that are only once in both O and N;
-  // these will become the anchors for the rest of the algorithm.
-  // In OArr and NArr, replace the selected tokens by their position in the other array
-
-  let maxVal = 1;
-  for (const token in ST) {
-    if (ST[token].OC === 1 && ST[token].NC === 1) {
-      OArr[OArr.indexOf(token)] = NArr.indexOf(token)
-      NArr[NArr.indexOf(token)] = ST[token].OLNO;
-    } else {
-      // check how many times the most repeated token is in either of the strings:
-      maxVal = Math.max(maxVal, ST[token].OC, ST[token].NC);
-    }
-  }
-
-  // Steps 4 and 5 only make sense if some tokens are present more than once!
-  if (maxVal > 1) {
-
-    // STEP 4: go through the NArr in ascending order and for those items that
-    // have been replaced with the index in the other array, check if the next
-    // item in both arrays is the same token (that is, a token that is present
-    // more than once in at least one of the strings).
-    // If so, replace both with the index of that item in the other array:
-
-    for (let i=0; i<NArr.length; i++) {
-      let token = NArr[i];
-      if (!ST.hasOwnProperty(token)) {
-      //if (ST.hasOwnProperty(token)) {
-        let j = OArr.indexOf(i);
-        // if a following item exists and is not a number, check if it is identical as the following token in OArr:
-        if (i+1<NArr.length && (ST.hasOwnProperty(NArr[i+1])) && j+1<OArr.length && (NArr[i+1] === OArr[j+1])) {
-          NArr[i+1] = j+1;
-          OArr[j+1] = i+1;
-         }
-      }
-    }
-
-    // STEP5: like step 4, but in descending order:
-
-    for (let i=NArr.length; i>=0; i--) {
-      let token = NArr[i];
-      if (!ST.hasOwnProperty(token)) {
-      //if (ST.hasOwnProperty(token)) {
-        let j = OArr.indexOf(i);
-        // if a preceding item exists and is not a number, check if it is identical as the preceding token in OArr:
-        if (i>0 && (ST.hasOwnProperty(NArr[i-1])) && j>0 && (NArr[i-1] === OArr[j-1])) {
-          NArr[i-1] = j-1;
-          OArr[j-1] = i-1;
-         }
-      }
-    }
-  }
-  // remove START and END indications:
-  OArr = OArr.slice(1, -1);
-  NArr = NArr.slice(1, -1);
-  // STEP6: piece the string back together, inserting html tags: in separate funtion.
-
-  return [OArr, NArr];
-}
 
 
-/**
- * refine the output of the WikEdDiff algorithm by using shingled n-grams on
- * last added and deleted section
- * @param {Array} O          Array of tokens for the old string
- * @param {Array} N          Array of tokens for the new string
- * @param {String} aHtml     text A with diff html tags
- * @param {String} bHtml     text B with diff html tags
- * @param {String} nextChars text content of the following html element
- * @return {Array}           Array containing 2 html strings (aHtml and bHtml)
- */
-function refine(O, N, aHtml, bHtml, nextChars){
-  //console.log("O: '"+O+"'");
-  //console.log("N: '"+N+"'");
 
 
-  if (O.length < refine_n || N.length < refine_n) {
-    //console.log("too short?");
-    aHtml += '<span class="removed">'+ O +'</span>';
-    bHtml += '<span class="added">'+ N +'</span>';
-  } else {
-    // go through the 6 steps of the algorithm in Heckel 1978, with shingled ngrams:
-    //console.log("refining");
-    let Oshingles = shingle(O, refine_n);
-    let Nshingles = shingle(N, refine_n);
-    //console.log("N: "+N);
-    //console.log("N shingled: "+Nshingles);
-    let [OArr, NArr] = heckel(Oshingles, Nshingles);
-    //[aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
-    aHtml = markupHeckelArray(Oshingles, OArr, NArr, aHtml, refine_n, "removed");
-    bHtml = markupHeckelArray(Nshingles, NArr, OArr, bHtml, refine_n, "added");
-  }
-  //console.log("aHtml.substring(aHtml.length-5, aHtml.length-1): "+aHtml.substring(aHtml.length-5, aHtml.length-1));
-
-  var aHtmlStripped = aHtml.replace(/<[^>]+>/g, "");
-  var bHtmlStripped = bHtml.replace(/<[^>]+>/g, "");
-  //console.log("aHtml: "+aHtml);
-  //console.log("aHtmlStripped: "+aHtmlStripped);
-  var aLastChar = aHtmlStripped.substring(aHtmlStripped.length-1);
-  var bLastChar = bHtmlStripped.substring(bHtmlStripped.length-1);
-  var aLastChars = aHtmlStripped.substring(aHtmlStripped.length-5);
-  var bLastChars = bHtmlStripped.substring(bHtmlStripped.length-5);
-
-  /*console.log("aLastChar: '"+aLastChar+"'; bLastChar: '"+bLastChar+"'");
-  console.log("aLastChars: '"+aLastChars+"'; bLastChars: '"+bLastChars+"'");
-  console.log("nextChar: '"+nextChars[0]+"'");
-  console.log("more than ARCHARS: "+(charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS));
-  console.log('nextChars[0] === " ": '+(nextChars && nextChars[0] === " "));
-  console.log('aLastChar === " ": '+(aLastChar === " "));
-  console.log('bLastChar === " ": '+(bLastChar === " "));*/
-
-  if (intoRows && (charLength(aHtml) > ARCHARS || charLength(bHtml) > ARCHARS)
-      //&& aHtml.substring(aHtml.length-2, aHtml.length-1) != " "
-      //&& bHtml.substring(bHtml.length-2, bHtml.length-1) != " "
-      && ((nextChars && nextChars[0] === " ") || (aLastChar === " " && bLastChar === " " ))){
-    //console.log("=>NEW ROW!");
-    displayDiff(aHtml, bHtml);
-    aHtml = "";
-    bHtml = "";
-  }
-  return [aHtml, bHtml];
-}
-
-/** 
- * parse the wikiEdDiff html into two separate strings and display them
- * @param {String} diffHtml output of the wikEdDiff algorithm
- */
-function parseDiffHtml(diffHtml){
-  var aHtml = "";
-  var bHtml = "";
-  let pos = 0;
-  let pos_changes = {"Old" : "", "New" : ""};
-
-  // Parse the html string and find its root node:
-  var parser = new DOMParser();
-  var wikiHtml = parser.parseFromString(diffHtml, "text/html");
-  if (VERBOSE) {console.log(wikiHtml);}
-  var rootNode = wikiHtml.getElementsByTagName("pre")[0]
-  if (VERBOSE) {console.log(rootNode);}
-
-  // loop through all the child nodes 
-  // and add their text content to text A and/or text B
-  // depending on the :
-  for (var i = 0; i < rootNode.childNodes.length; i++) {
-    var c = rootNode.childNodes[i];
-
-    if (VERBOSE) {console.log(c);}
-    if (c.nodeType === Node.TEXT_NODE){  
-      // unmarked text => substring present in both A and B
-
-      if (VERBOSE) {console.log("UNMARKED: COMMON TEXT "+c.textContent);}
-
-      // finalize the changes recorded in the pos_changes dictionary:
-      // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
-      if (VERBOSE) {console.log(pos_changes);}
-      [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
-
-      // reset the pos_changes dictionary:
-      pos_changes = {"Old" : "", "New" : ""};
-
-      // add the common text to both xHtml strings:
-      aHtml += '<span class="common">' + c.textContent + '</span>';
-      bHtml += '<span class="common">' + c.textContent + '</span>';
-
-    } else if (c.classList.contains("wikEdDiffInsert")) { 
-      // => substring only present in text B ("Inserted" in B)
-
-      if (VERBOSE) {console.log("MARK IN B (INSERTION)");}
-
-      // Add the text content of all child nodes to the list of changes in the new text (text B):
-      var children = Array.from(c.childNodes);
-      children.forEach(function(child){
-        if (child.classList && child.classList.contains("wikEdDiffNewline")){
-          pos_changes["New"] += "¶"  // "<br>";
-        } else {
-          pos_changes["New"] += child.textContent;
-        }
-      });
-
-    } else if (c.classList.contains("wikEdDiffDelete")) {  
-      // =>  substring only present in text A ("Deleted" in B)
-
-      if (VERBOSE) {console.log("MARK IN A (DELETION) "+c.textContent);}
-
-      // Add the text content of all child nodes to the list of changes in the old text (text A):
-      var children = Array.from(c.childNodes);
-      children.forEach(function(child){
-        if (child.classList && child.classList.contains("wikEdDiffNewline")){
-          pos_changes["Old"] += "¶"  // "<br>";
-        } else {
-          pos_changes["Old"] += child.textContent;
-        }
-      });
-
-    } else if (c.classList.contains("wikEdDiffBlock")) {  
-      // =>  position in text B of a text block that is in both texts but in a different location
-
-      if (VERBOSE) {console.log("MOVED, B "+c.textContent);}
-
-      if (c.textContent.length > 1){
-        // finalize the changes recorded in the pos_changes dictionary:
-        // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent);
-        // reset the pos_changes dictionary:
-        pos_changes = {"Old" : "", "New" : ""};
-        bHtml += '<span class="moved">'+c.textContent+'</span>';
-      }
-
-    } else if (c.classList.contains("wikEdDiffMarkRight") || c.classList.contains("wikEdDiffMarkLeft")) { 
-      // =>  position in text A of a text block that is in both texts but in a different location
-
-      if (VERBOSE) {console.log("MOVED, A "+c.getAttribute('title'));}
-      
-      // in this case, the text content is not enclosed as a child in the node 
-      // but in the title attribute of the node:
-      if (c.getAttribute('title').length > 1){ 
-        // finalize the changes recorded in the pos_changes dictionary:
-        // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
-        [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.getAttribute('title'));
-        // reset the pos_changes dictionary:
-        pos_changes = {"Old" : "", "New" : ""};
-        aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
-      }
-    }
-  }
-
-  // add the remaining changes to the aHtml and bHtml strings:
-  [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, " ");
-
-
-  // display the diffs in the output elements:
-  displayDiff(aHtml, bHtml);
-  document.getElementById("cDiff").innerHTML = diffHtml;
-  if (singleDiv){
-    document.getElementById("outputSingleDiv").style.display = "block";
-    document.getElementById("cDiff").style.display = "block";
-  } else {
-    document.getElementById("outputSingleDiv").style.display = "none";
-    document.getElementById("cDiff").style.display = "none";
-  }
-
-  if (VERBOSE) {console.log(aHtml);}
-  if (VERBOSE) {console.log(bHtml);}
-  outputDiv.style.display="block";
-  outputIntro.style.display="block";
-  outputButtons.style.display="inline-block";
-  inputDiv.style.display="none";
-  inputIntro.style.display="none";
-  inputButtons.style.display="none";
-  // create download link:
-  /*
-  // svg approach: does not work well (not whole table, no highlighting)
-  let table = document.getElementById("outputTable").innerHTML;
-  let svg = `<?xml version="1.0" standalone="yes"?>
-<svg xmlns="http://www.w3.org/2000/svg">
-  <foreignObject x="10" y="10" width="100" height="150">
-    <body xmlns="http://www.w3.org/1999/xhtml">
-      ${table}
-    </body>
-  </foreignObject>
-</svg>`
-  if (VERBOSE) {console.log(svg);}
-  let href = 'data:text/plain;charset=utf-8,'+svg;
-  */
-  /*
-  // png download using html2canvas: does not work well: parts of text missing!
-  html2canvas(document.getElementById("outputTable")).then(canvas => {
-      let img = canvas.toDataURL("image/png");
-      let href =  img.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
-      let downloadLink = document.getElementById("downloadLink");
-      downloadLink.setAttribute('href', href);
-      downloadLink.setAttribute("download", "diff.png");
-      if (VERBOSE) {console.log(href);}
-  });
-  */
-  // png download using dom-to-image (https://github.com/tsayen/dom-to-image):
-  //domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
-  //    /*let downloadLink = document.getElementById("pngDownloadLink");
-  //    downloadLink.setAttribute('href', dataUrl);
-  //    downloadLink.setAttribute("download", "diff.png");*/
-  //    //console.log(dataUrl);
-  //    let dataUrlHidingPlace = document.getElementById("pngDataUrl");
-  //    dataUrlHidingPlace.innerHTML = dataUrl;
-  //});
-  //domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
-  //    /*let downloadLink = document.getElementById("svgDownloadLink");
-  //    downloadLink.setAttribute('href', dataUrl);
-  //    downloadLink.setAttribute("download", "diff.svg");*/
-  //    //console.log(dataUrl);
-  //    let dataUrlHidingPlace = document.getElementById("svgDataUrl");
-  //    dataUrlHidingPlace.innerHTML = dataUrl;
-  //});
-
-}
 
 /** 
  * Calculate the diff between two input texts
@@ -1553,7 +1084,7 @@ async function calcDiff() {
   normalizeYa = normalizeYaCheck.checked;
   singleDiv = singleDivCheck.checked;
   refine_n = parseInt(ngramInput.value);
-  ARCHARS = parseInt(arCharInp.value);
+  arChars = parseInt(arCharInp.value);
 
   //update the image width and font size from the options:
   changeImgWidth();
@@ -1572,17 +1103,74 @@ async function calcDiff() {
       a = cleanText(a);
       b = cleanText(b);
 
-      // create the diff using the WikEdDiff algorithm:
-      var wikEdDiff = new WikEdDiff();
-      // experiment with special regexes for Arabic words and characters:
-      //wikEdDiff.config.regExp.split.word = arTokExtRegex;
-      //wikEdDiff.config.regExp.countWords = arTokExtRegex;
-      //wikEdDiff.config.regExp.split.character = arCharExtRegex;
-      var diffHtml =  wikEdDiff.diff(a, b);
-      if (VERBOSE) {console.log(diffHtml);}
+      // let [aHtml, bHtml] = 
+      let resp = await kitabDiff(a, b, intoRows=intoRows, arChars=arChars, refine_n=refine_n);
+      let [diffHtml, aHtml, bHtml] = resp;
 
-      // split the output of the WikEdDiff algorithm into two separate html strings:
-      parseDiffHtml(diffHtml);
+      // insert the diffs in the output elements:
+      displayDiff(aHtml, bHtml);
+
+      // make sure the relevant elements are displayed:
+      document.getElementById("cDiff").innerHTML = diffHtml;
+      if (singleDiv){
+        document.getElementById("outputSingleDiv").style.display = "block";
+        document.getElementById("cDiff").style.display = "block";
+      } else {
+        document.getElementById("outputSingleDiv").style.display = "none";
+        document.getElementById("cDiff").style.display = "none";
+      }
+    
+      if (VERBOSE) {console.log(aHtml);}
+      if (VERBOSE) {console.log(bHtml);}
+      outputDiv.style.display="block";
+      outputIntro.style.display="block";
+      outputButtons.style.display="inline-block";
+      inputDiv.style.display="none";
+      inputIntro.style.display="none";
+      inputButtons.style.display="none";
+      // create download link:
+      /*
+      // svg approach: does not work well (not whole table, no highlighting)
+      let table = document.getElementById("outputTable").innerHTML;
+      let svg = `<?xml version="1.0" standalone="yes"?>
+    <svg xmlns="http://www.w3.org/2000/svg">
+      <foreignObject x="10" y="10" width="100" height="150">
+        <body xmlns="http://www.w3.org/1999/xhtml">
+          ${table}
+        </body>
+      </foreignObject>
+    </svg>`
+      if (VERBOSE) {console.log(svg);}
+      let href = 'data:text/plain;charset=utf-8,'+svg;
+      */
+      /*
+      // png download using html2canvas: does not work well: parts of text missing!
+      html2canvas(document.getElementById("outputTable")).then(canvas => {
+          let img = canvas.toDataURL("image/png");
+          let href =  img.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
+          let downloadLink = document.getElementById("downloadLink");
+          downloadLink.setAttribute('href', href);
+          downloadLink.setAttribute("download", "diff.png");
+          if (VERBOSE) {console.log(href);}
+      });
+      */
+      // png download using dom-to-image (https://github.com/tsayen/dom-to-image):
+      //domtoimage.toPng(document.getElementById("outputTable")).then(dataUrl => {
+      //    /*let downloadLink = document.getElementById("pngDownloadLink");
+      //    downloadLink.setAttribute('href', dataUrl);
+      //    downloadLink.setAttribute("download", "diff.png");*/
+      //    //console.log(dataUrl);
+      //    let dataUrlHidingPlace = document.getElementById("pngDataUrl");
+      //    dataUrlHidingPlace.innerHTML = dataUrl;
+      //});
+      //domtoimage.toSvg(document.getElementById("outputTable")).then(dataUrl => {
+      //    /*let downloadLink = document.getElementById("svgDownloadLink");
+      //    downloadLink.setAttribute('href', dataUrl);
+      //    downloadLink.setAttribute("download", "diff.svg");*/
+      //    //console.log(dataUrl);
+      //    let dataUrlHidingPlace = document.getElementById("svgDataUrl");
+      //    dataUrlHidingPlace.innerHTML = dataUrl;
+      //});
     } else { //
       displayDiff(a, b);
     }
