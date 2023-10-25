@@ -324,7 +324,7 @@ function parseCSV(r){
     })
     csvArray.push(rowArray);
   })
-  console.log(csvArray[2]);
+  console.log(csvArray[1]);
   return csvArray;
 }
 
@@ -354,7 +354,8 @@ function displayCSV(){
 
   // create data rows:
   for (let rowno=0; rowno < csvArray.length; rowno++){
-    rowData = csvArray[rowno];
+    const rowData = csvArray[rowno];
+    console.log(rowData);
     var filterStr = ""
     var row = document.createElement("tr");
     let cell = document.createElement("td");
@@ -366,7 +367,7 @@ function displayCSV(){
     row.appendChild(cell);
     // add relevant columns:
     for (let i=0; i < relevCols.length; i++){
-      col_offset = relevCols[i];
+      const col_offset = relevCols[i];
       let cell = document.createElement("td");
       if (i%2 == 0){
         let ms_id = rowData[col_offset].replace(/.+ms|.+_/g, "ms");
@@ -403,6 +404,7 @@ function loadCSV() {
 
     csvArray = parseCSV(fr.result);
     csvHeader = csvArray.shift();
+    console.log(csvHeader);
 
     // define ID column name for different srt data inputs:
     if (csvHeader.includes("idDoc1")){
@@ -412,7 +414,7 @@ function loadCSV() {
     }
 
     relevCols = [0,0,0,0];
-    for (i in csvHeader){
+    for (let i in csvHeader){
       if (csvHeader[i] == idColName+"1" || csvHeader[i] == idColName){
         relevCols[0] = i;
       } else if (csvHeader[i] == "s1"){
@@ -594,9 +596,9 @@ function loadSelectedRows(){
   rows.forEach(function(row){
     let inp = row.getElementsByTagName("input")[0];
     if (inp.checked) {
-      a = header.getElementsByTagName("th")[2].textContent;
+      let a = header.getElementsByTagName("th")[2].textContent;
       a += "."+row.getElementsByTagName("td")[1].textContent;
-      b = header.getElementsByTagName("th")[4].textContent;
+      let b = header.getElementsByTagName("th")[4].textContent;
       b += "."+row.getElementsByTagName("td")[3].textContent;
       inputData.push([a, b]);
       a = row.getElementsByTagName("td")[2].textContent;
