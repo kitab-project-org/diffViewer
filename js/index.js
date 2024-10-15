@@ -370,8 +370,12 @@ function displayCSV(){
       const col_offset = relevCols[i];
       let cell = document.createElement("td");
       if (i%2 == 0){
-        let ms_id = rowData[col_offset].replace(/.+ms|.+_/g, "ms");
-        ms_id = ms_id.replace(/(\d+)-\1/g, "$1");
+        if (rowData[col_offset].match(/^\d\d\d\d/)) {
+          let ms_id = rowData[col_offset];
+        } else {
+          let ms_id = rowData[col_offset].replace(/.+ms|.+_/g, "ms");
+          ms_id = ms_id.replace(/(\d+)-\1/g, "$1");
+        }
         cell.textContent = ms_id;
       } else {
         cell.textContent = rowData[col_offset].replace(/-+/g, "");
@@ -596,10 +600,18 @@ function loadSelectedRows(){
   rows.forEach(function(row){
     let inp = row.getElementsByTagName("input")[0];
     if (inp.checked) {
-      let a = header.getElementsByTagName("th")[2].textContent;
-      a += "."+row.getElementsByTagName("td")[1].textContent;
-      let b = header.getElementsByTagName("th")[4].textContent;
-      b += "."+row.getElementsByTagName("td")[3].textContent;
+      if (row.getElementsByTagName("td")[1].textContent.match(/^\d\d\d\d/)) {
+        let a = row.getElementsByTagName("td")[1].textContent;
+      } else {
+        let a = header.getElementsByTagName("th")[2].textContent;
+         a += "."+row.getElementsByTagName("td")[1].textContent;
+      }
+      if (row.getElementsByTagName("td")[3].textContent.match(/^\d\d\d\d/)) {
+        let b = row.getElementsByTagName("td")[3].textContent;
+      } else {
+        let b = header.getElementsByTagName("th")[4].textContent;
+        b += "."+row.getElementsByTagName("td")[3].textContent;
+      }
       inputData.push([a, b]);
       a = row.getElementsByTagName("td")[2].textContent;
       b = row.getElementsByTagName("td")[4].textContent;
