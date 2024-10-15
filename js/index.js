@@ -602,7 +602,7 @@ function loadSelectedRows(){
     let inp = row.getElementsByTagName("input")[0];
     if (inp.checked) {
       let a = row.getElementsByTagName("td")[1].textContent;
-      if (!a.textContent.match(/^\d\d\d\d/)) {
+      if (!a.match(/^\d\d\d\d/)) {
         a = header.getElementsByTagName("th")[2].textContent + "." + a;
       }
       let b = row.getElementsByTagName("td")[3].textContent;
