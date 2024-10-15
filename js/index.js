@@ -372,7 +372,7 @@ function displayCSV(){
       if (i%2 == 0){
         let ms_id = rowData[col_offset];
         if (ms_id.match(/^\d\d\d\d/)) {
-          ms_id = ms_id.replace(/\./g, "&ZeroWidthSpace;.");
+          ms_id = ms_id.replace(/\./g, "\u200b.");
         } else {
           ms_id = ms_id.replace(/.+ms|.+_/g, "ms");
           ms_id = ms_id.replace(/(\d+)-\1/g, "$1");
