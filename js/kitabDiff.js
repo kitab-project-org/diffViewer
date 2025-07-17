@@ -72,13 +72,40 @@ function countArChars(s){
  */
 function cleanDiffHtml(s) {
     // remove empty tags:
-    s = s.replace(/<span class="\w+"><\/span>/g, "");
+    //s = s.replace(/<span class="\w+"><\/span>/g, "");
     // merge neighboring tags of the same class:
     s = s.replace(/(?<=<span class="(\w+)">)([^<]+)<\/span><span class="\1">/g, '$2');
     // Replace line ending placeholders with <br> tags:
     s = s.replace(/¶/g, "<br>");
     return s;
   }
+
+
+  
+/**
+ * Replace placeholders for moved text in the html strings
+ * @param {String} aHtml (part of the) text A with diff html tags; contains placeholders ("X") for moved text
+ * @param {String} bHtml (part of the) text B with diff html tags; contains placeholders ("X") for moved text
+ * @param {Array} aMoved array of moved text contents in (this part of) text A
+ * @param {Array} bMoved array of moved text contents in (this part of) text B
+ * @returns 
+ */
+function insertMoved(aHtml, bHtml, aMoved, bMoved){
+  // if there is a placeholder for a "moved" span in either, replace it:
+  for (let i=0; i<aMoved.length; i++) {
+    // if it's at the end or beginning of the span, move it outside of the span:
+    aHtml = aHtml.replace("X</span>", "</span>"+aMoved[i]).replace('<span class="removed">X', aMoved[i]+'<span class="removed">');
+    // if it's in the middle, interrupt the span:
+    aHtml = aHtml.replace("X", '</span>'+aMoved[i]+'<span class="removed">');
+  }
+  for (let i=0; i<bMoved.length; i++) {
+    // if it's at the end or beginning of the span, move it outside of the span:
+    bHtml = bHtml.replace("X</span>", "</span>"+bMoved[i]).replace('<span class="added">X', bMoved[i]+'<span class="added">');
+    // if it's in the middle, interrupt the span:
+    bHtml = bHtml.replace("X", '</span>'+bMoved[i]+'<span class="added">');
+  }
+  return [aHtml, bHtml];
+}
 
 
 /**
@@ -319,45 +346,47 @@ function markupHeckelArray(toks, toksArr, otherArr, xHtml, n, spanClass){
  * @return {Array}           Array containing 2 html strings (aHtml and bHtml)
  */
 function refine(O, N, aHtml, bHtml, nextChars, intoRows, arChars, refine_n){
-    //console.log("O: '"+O+"'");
-    //console.log("N: '"+N+"'");
-  
-  
-    if (O.length < refine_n || N.length < refine_n) {
-      //console.log("too short?");
-      aHtml += '<span class="removed">'+ O +'</span>';
-      bHtml += '<span class="added">'+ N +'</span>';
-    } else {
-      // go through the 6 steps of the algorithm in Heckel 1978, with shingled ngrams:
-      //console.log("refining");
-      let Oshingles = shingle(O, refine_n);
-      let Nshingles = shingle(N, refine_n);
-      //console.log("N: "+N);
-      //console.log("N shingled: "+Nshingles);
-      let [OArr, NArr] = heckel(Oshingles, Nshingles);
-      //[aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
-      aHtml = markupHeckelArray(Oshingles, OArr, NArr, aHtml, refine_n, "removed");
-      bHtml = markupHeckelArray(Nshingles, NArr, OArr, bHtml, refine_n, "added");
-    }
-    //console.log("aHtml.substring(aHtml.length-5, aHtml.length-1): "+aHtml.substring(aHtml.length-5, aHtml.length-1));
-  
-    var aHtmlStripped = aHtml.replace(/<[^>]+>/g, "");
-    var bHtmlStripped = bHtml.replace(/<[^>]+>/g, "");
-    var aLastChar = aHtmlStripped.substring(aHtmlStripped.length-1);
-    var bLastChar = bHtmlStripped.substring(bHtmlStripped.length-1);
-
-    // Add a splitter to make comparing texts easier:
-    if (intoRows && (countArChars(aHtml) > arChars || countArChars(bHtml) > arChars)
-        //&& aHtml.substring(aHtml.length-2, aHtml.length-1) != " "
-        //&& bHtml.substring(bHtml.length-2, bHtml.length-1) != " "
-        && ((nextChars && nextChars[0] === " ") || (aLastChar === " " && bLastChar === " " ))){
-      //console.log("=>NEW ROW!");
-      aHtml += "###NEW_ROW###";  // aHtml string can be split later and each section put into a new row in a table
-      bHtml += "###NEW_ROW###";  // bHtml string can be split later and each section put into a new row in a table
-    }
-
-    return [aHtml, bHtml];
+  if (VERBOSE) {
+    console.log("REFINING:")
+    console.log("O: '"+O+"'");
+    console.log("N: '"+N+"'");
   }
+
+  if (O.length < refine_n || N.length < refine_n) {
+    //console.log("too short?");
+    aHtml += '<span class="removed">'+ O +'</span>';
+    bHtml += '<span class="added">'+ N +'</span>';
+  } else {
+    // go through the 6 steps of the algorithm in Heckel 1978, with shingled ngrams:
+    //console.log("refining");
+    let Oshingles = shingle(O, refine_n);
+    let Nshingles = shingle(N, refine_n);
+    //console.log("N: "+N);
+    //console.log("N shingled: "+Nshingles);
+    let [OArr, NArr] = heckel(Oshingles, Nshingles);
+    //[aHtml, bHtml] = markupHeckelArrays(Oshingles, Nshingles, OArr, NArr, aHtml, bHtml, refine_n);
+    aHtml = markupHeckelArray(Oshingles, OArr, NArr, aHtml, refine_n, "removed");
+    bHtml = markupHeckelArray(Nshingles, NArr, OArr, bHtml, refine_n, "added");
+  }
+  //console.log("aHtml.substring(aHtml.length-5, aHtml.length-1): "+aHtml.substring(aHtml.length-5, aHtml.length-1));
+
+  var aHtmlStripped = aHtml.replace(/<[^>]+>/g, "");
+  var bHtmlStripped = bHtml.replace(/<[^>]+>/g, "");
+  var aLastChar = aHtmlStripped.substring(aHtmlStripped.length-1);
+  var bLastChar = bHtmlStripped.substring(bHtmlStripped.length-1);
+
+  // Add a splitter to make comparing texts easier:
+  if (intoRows && (countArChars(aHtml) > arChars || countArChars(bHtml) > arChars)
+      //&& aHtml.substring(aHtml.length-2, aHtml.length-1) != " "
+      //&& bHtml.substring(bHtml.length-2, bHtml.length-1) != " "
+      && ((nextChars && nextChars[0] === " ") || (aLastChar === " " && bLastChar === " " ))){
+    //console.log("=>NEW ROW!");
+    aHtml += "###NEW_ROW###";  // aHtml string can be split later and each section put into a new row in a table
+    bHtml += "###NEW_ROW###";  // bHtml string can be split later and each section put into a new row in a table
+  }
+
+  return [aHtml, bHtml];
+}
 
 
 /**
@@ -371,6 +400,8 @@ function refine(O, N, aHtml, bHtml, nextChars, intoRows, arChars, refine_n){
 function parseDiffHtml(diffHtml, intoRows, arChars, refine_n){
     var aHtml = "";
     var bHtml = "";
+    let aMoved = [];
+    let bMoved = [];
     let pos_changes = {"Old" : "", "New" : ""};
   
     // Parse the html string and find its root node:
@@ -396,6 +427,12 @@ function parseDiffHtml(diffHtml, intoRows, arChars, refine_n){
         // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
         if (VERBOSE) {console.log(pos_changes);}
         [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent, intoRows, arChars, refine_n);
+
+        // if there are placeholders for "moved" spans in either, replace them:
+        [aHtml, bHtml] = insertMoved(aHtml, bHtml, aMoved, bMoved);
+        // reset the "moved" arrays:
+        aMoved = [];
+        bMoved = [];
   
         // reset the pos_changes dictionary:
         pos_changes = {"Old" : "", "New" : ""};
@@ -440,12 +477,10 @@ function parseDiffHtml(diffHtml, intoRows, arChars, refine_n){
         if (VERBOSE) {console.log("MOVED, B "+c.textContent);}
   
         if (c.textContent.length > 1){
-          // finalize the changes recorded in the pos_changes dictionary:
-          // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
-          [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.textContent, intoRows, arChars, refine_n);
-          // reset the pos_changes dictionary:
-          pos_changes = {"Old" : "", "New" : ""};
-          bHtml += '<span class="moved">'+c.textContent+'</span>';
+          // add a placeholder for the moved text in the relevant section
+          // (will be replaced with the full tag+content later)
+          pos_changes["New"] += "X"
+          bMoved.push('<span class="moved">'+c.textContent+'</span>');
         }
   
       } else if (c.classList.contains("wikEdDiffMarkRight") || c.classList.contains("wikEdDiffMarkLeft")) { 
@@ -456,18 +491,22 @@ function parseDiffHtml(diffHtml, intoRows, arChars, refine_n){
         // in this case, the text content is not enclosed as a child in the node 
         // but in the title attribute of the node:
         if (c.getAttribute('title').length > 1){ 
-          // finalize the changes recorded in the pos_changes dictionary:
-          // refine the WikEdDiff output for those changes and add them to the aHtml and bHtml strings:
-          [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, c.getAttribute('title'), intoRows, arChars, refine_n);
-          // reset the pos_changes dictionary:
-          pos_changes = {"Old" : "", "New" : ""};
-          aHtml += '<span class="moved">'+c.getAttribute('title')+'</span>';
+          // add a placeholder for the moved text in the relevant section
+          // (will be replaced with the full tag+content later)
+          pos_changes["Old"] += "X"
+          aMoved.push('<span class="moved">'+c.getAttribute('title')+'</span>');
         }
       }
     }
   
     // add the remaining changes to the aHtml and bHtml strings:
     var [aHtml, bHtml] = refine(pos_changes["Old"], pos_changes["New"], aHtml, bHtml, " ", intoRows, arChars, refine_n);
+
+    // if there are placeholders for "moved" spans in either, replace them:
+    [aHtml, bHtml] = insertMoved(aHtml, bHtml, aMoved, bMoved);
+    // reset the "moved" arrays:
+    aMoved = [];
+    bMoved = [];
 
     // final cleanup of the html code (remove empty spans etc.):
     aHtml = cleanDiffHtml(aHtml);
