@@ -1054,7 +1054,7 @@ async function downloadRaster(outputType){
     // using snapdom's download function
     await snapdom.download(tableEl, {
         format: "png",
-        name: "diff",
+        filename: "KITAB-diff",
         scale: scaleFactor,
         embedFonts: true
       }
@@ -1064,7 +1064,7 @@ async function downloadRaster(outputType){
     // using snapdom's download function
     await snapdom.download(tableEl, {
         format: "jpg",
-        name: "diff",
+        filename: "KITAB-diff",
         scale: scaleFactor,
         embedFonts: true
       }
