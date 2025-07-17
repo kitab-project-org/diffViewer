@@ -277,8 +277,8 @@ window.addEventListener('load', function() {
   lastPageSpan = document.getElementById("lastPageSpan");
   downloadAllPngBtn = document.getElementById("downloadAllPngBtn");
   downloadAllPngBtn.addEventListener("click", downloadAllPng);
-  downloadAllSvgBtn = document.getElementById("downloadAllSvgBtn");
-  downloadAllSvgBtn.addEventListener("click", downloadAllSvg);
+  /*downloadAllSvgBtn = document.getElementById("downloadAllSvgBtn");
+  downloadAllSvgBtn.addEventListener("click", downloadAllSvg);*/
 });
 
 window.addEventListener('resize', function(){
