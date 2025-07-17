@@ -3,7 +3,10 @@ Use the kitabDiff algorithm (js/kitabDiff.js) to display a diff of two text frag
 
 TO DO: 
 * fix the tiff download
-* find out why the svg download is sometimes very big
+* find a solution for svg export: both dom-to-image and 
+  html-to-image (https://github.com/bubkoo/html-to-image) embed the html into 
+  an svg file using "foreignobject" - the resulting 
+  svg file cannot be displayed in graphical software
 */
 
 import { kitabDiff } from "./kitabDiff.js";
@@ -54,22 +57,27 @@ var inputB = `ثم إني استطلته بعد تسويدي لأكثره وتر
 
 // initialize global variables:
 
-var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons,
-loadFromTextareaBtn, uploadBtn, inputBtn, optionsBtn, svgBtn, pngBtn, tiffBtn, resetButton,
-optionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, highlightDiffBtn, highlightCommonBtn, rowsChk, punctCheck, punct,
-ngramInput, refine_n, arChars, cleanChk, arCharInp, fontSizeInp, imgWidthInp, imgHeightInp, imgDpiInp, normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
-normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal, closeSpan, inputfileBtn, csvTable, rowFilterInp,
+var inputIntro, outputIntro, inputButtons, outputButtons, optionButtons, editOptionButtons,
+loadFromTextareaBtn, uploadBtn, editBtn, inputBtn, optionsBtn, editOptionsBtn, svgBtn, pngBtn, tiffBtn, jpegBtn, resetButton, editResetButton,
+optionsDiv, editOptionsDiv, inputDiv, outputDiv, outputSingleDiv, loadExampleLnk, resizeCont, clearBtn, highlightDiffBtn, 
+highlightCommonBtn, rowsChk, punctCheck, punct,
+ngramInput, refine_n, arChars, cleanChk, arCharInp, fontSizeInp, imgWidthInp, imgHeightInp, imgDpiInp, 
+normalizeAlifCheck, normalizeYaCheck, normalizeHaCheck, singleDivCheck,
+normalizeAlif, normalizeYa, normalizeHa, singleDiv, intoRows, clean, uploadModal, 
+editModal, editOutputDiv, colorpicker, colors, editColorDiv, editColor, highlighter, 
+closeUploadBtn, closeEditBtn, inputfileBtn, csvTable, rowFilterInp,
 csvArray, csvHeader, relevCols, selectRowsControls, selectAllRowsBtn, deselectAllRowsBtn, loadSelectedRowsBtn,
 nextPageBtn, prevPageBtn, paginationDiv, currentPageInp, lastPageSpan, downloadAllPngBtn, downloadAllSvgBtn;
 
 var VERBOSE = false;
 var inputData = [];
 var currentPage = 0;
-//var imgHeight = 0;
 var defaultImgDpi = 300;
 var imgDpi = 300;
-var defaultImgWidth = 200;
+var defaultImgWidth = 120;
 var imgWidth = 0;
+var defaultImgHeight = 180;
+var imgHeight = 0;
 var defaultFontSize = 20;
 const inch = 25.4;
 
@@ -86,6 +94,7 @@ window.addEventListener('load', function() {
   inputButtons = document.getElementById("inputButtons");
   outputButtons = document.getElementById("outputButtons");
   optionButtons = document.getElementById("optionButtons");
+  editOptionButtons = document.getElementById("editOptionButtons");
 
   loadExampleLnk = document.getElementById("loadExample");
   loadExampleLnk.addEventListener("click", loadExample);
@@ -113,10 +122,47 @@ window.addEventListener('load', function() {
   uploadBtn.addEventListener("click", function() {
     uploadModal.style.display = "block";
   });
-  closeSpan = document.getElementsByClassName("close")[0];
-  closeSpan.addEventListener("click", function() {
+  closeUploadBtn = document.getElementById("closeUploadBtn");
+  closeUploadBtn.addEventListener("click", function() {
     uploadModal.style.display = "none";
   });
+
+  editModal = document.getElementById("editModal");
+  editBtn = document.getElementById("editButton");
+  editOutputDiv = document.getElementById("editOutputDiv");
+  editBtn.addEventListener("click", function() {
+    // copy the output table to the edit pane:
+    editOutputDiv.innerHTML = outputDiv.innerHTML;
+    // replace the classes with the color style:
+    let classColors = {
+      "common": "white", 
+      "removed": "lightblue", 
+      "added": "lightgreen", 
+      "moved": "PaleGoldenRod"
+    };
+    let spans = editOutputDiv.getElementsByTagName("span");
+    for (const span of spans){
+      span.style.backgroundColor = classColors[span.className];
+      span.className = "highlighted";
+    }
+    // make the table resizable: 
+    resizer = editOutputDiv.getElementsByClassName("resizer")[0];
+    resizer.addEventListener('mousedown', initResize, false);
+    // display the modal:
+    editModal.style.display = "block";
+  });
+  closeEditBtn = document.getElementById("closeEditBtn");
+  closeEditBtn.addEventListener("click", function() {
+    editModal.style.display = "none";
+  });
+  // configure the color picker for the edit panel:  
+  colorpicker = document.getElementById("colorpicker");
+  colors = new ColorPicker(colorpicker);
+  highlighter = new TextHighlighter(editOutputDiv, {onAfterHighlight: () => postProcessSpans(editOutputDiv)});
+  colors.onColorChange(function (color) {
+    highlighter.setColor(color);
+  });
+
   inputfileBtn = document.getElementById("inputfileButton");
   inputfileBtn.addEventListener("change", loadCSV);
   selectRowsControls = document.getElementById("selectRowsControls");
@@ -148,16 +194,35 @@ window.addEventListener('load', function() {
     }
   });
 
-  svgBtn = document.getElementById("svgButton");
-  svgBtn.addEventListener("click", downloadSvg);
+  editOptionsDiv = document.getElementById("editOptions");
+  editOptionsBtn = document.getElementById("editOptionsButton");
+  editOptionsBtn.addEventListener("click", function(){
+    if (editOptionsBtn.value === "Options"){
+      editOptionsDiv.style.display = "block";
+      editOptionsBtn.value = "Hide options";
+      editOptionButtons.style.display = "inline-block";
+    } else {
+      editOptionsDiv.style.display = "none";
+      editOptionsBtn.value = "Options";
+      editOptionButtons.style.display = "none";
+    }
+  });
+
+  /*svgBtn = document.getElementById("svgButton");
+  svgBtn.addEventListener("click", downloadSvg);*/
   pngBtn = document.getElementById("pngButton");
   pngBtn.addEventListener("click", downloadPng);
-  tiffBtn = document.getElementById("tiffButton");
-  tiffBtn.addEventListener("click", downloadTiff);
+  /*tiffBtn = document.getElementById("tiffButton");
+  tiffBtn.addEventListener("click", downloadTiff);*/
+  jpegBtn = document.getElementById("jpegButton");
+  jpegBtn.addEventListener("click", downloadJpeg);
 
 
   resetButton = document.getElementById("resetButton");
   resetButton.addEventListener("click", resetOptions);
+
+  editResetButton = document.getElementById("editResetButton");
+  editResetButton.addEventListener("click", resetEditOptions);
 
   highlightDiffBtn = document.getElementById("highlightDiffBtn");
   highlightDiffBtn.addEventListener("click", toggleHighlighting);
@@ -171,6 +236,8 @@ window.addEventListener('load', function() {
   document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
   imgWidthInp = document.getElementById("imgWidthInput");
   imgWidthInp.addEventListener("change",  changeImgWidth);
+  imgHeightInp = document.getElementById("imgHeightInput");
+  imgHeightInp.addEventListener("change",  changeImgHeight);
   imgDpiInp = document.getElementById("imgDpiInput");
   imgDpiInp.addEventListener("change",  changeImgDpi);
   arCharInp = document.getElementById("arCharInput");
@@ -215,7 +282,7 @@ window.addEventListener('load', function() {
 });
 
 window.addEventListener('resize', function(){
-  if (outputDiv.style.display !== "none"){
+  if (outputDiv.style.display !== "none" && editOutputDiv.style.display === "none"){
     calcDiffIfVisible();
   }
 });
@@ -324,7 +391,6 @@ function parseCSV(r){
     })
     csvArray.push(rowArray);
   })
-  console.log(csvArray[1]);
   return csvArray;
 }
 
@@ -355,7 +421,6 @@ function displayCSV(){
   // create data rows:
   for (let rowno=0; rowno < csvArray.length; rowno++){
     const rowData = csvArray[rowno];
-    console.log(rowData);
     var filterStr = ""
     var row = document.createElement("tr");
     let cell = document.createElement("td");
@@ -394,17 +459,17 @@ function displayCSV(){
  * Upload csv file with input strings
  */
 function loadCSV() {
-  console.log("file received");
+  if (VERBOSE) console.log("file received");
   selectRowsControls.style.display="block";
   var fn = this.value;
   //fn = fn.replace(/.*[\/\\]/, ''); // remove the fake path before the filename
   var fr=new FileReader();
   fr.onload=function(){
-    console.log("file loaded");
+    if (VERBOSE) console.log("file loaded");
 
     csvArray = parseCSV(fr.result);
     csvHeader = csvArray.shift();
-    console.log(csvHeader);
+    if (VERBOSE) console.log(csvHeader);
 
     // define ID column name for different srt data inputs:
     if (csvHeader.includes("idDoc1")){
@@ -440,13 +505,24 @@ function resetOptions(){
   normalizeAlifCheck.checked = true;
   normalizeYaCheck.checked = true;
   normalizeHaCheck.checked = true;
-  fontSizeInp.value = "16";
+  /*fontSizeInp.value = "16";
   imgWidthInp.value = String(defaultImgWidth);
-  imgDpiInp.value = String(defaultImgDpi);
+  imgDpiInp.value = String(defaultImgDpi);*/
   ngramInput.value = "3";
   rowsCheck.checked = false;
   arCharInp.value = "20";
   singleDivCheck.checked = false;
+  changeFontSize();
+}
+
+/**
+ * Reset all edit options to default
+ */
+function resetEditOptions(){
+  imgWidthInp.value = String(defaultImgWidth);
+  imgHeightInp.value = String(defaultImgHeight);
+  imgDpiInp.value = String(defaultImgDpi);
+  ngramInput.value = "3";
   changeFontSize();
 }
 
@@ -507,12 +583,25 @@ function changeFontSize(){
  */
 function changeImgWidth(){
   let w = parseInt(imgWidthInp.value);
-  if (!isNaN(w)){
-    imgWidth = w;
+  if (isNaN(w)){
+    imgWidth = 0;
   } else {
-    imgWidth = defaultImgWidth;
+    imgWidth = w;
   }
-  console.log("Image width changed to "+imgWidth);
+  if (VERBOSE) console.log("(Maximum) image width set to "+imgWidth);
+}
+
+/**
+ * Change the (maximum) height of the output image
+ */
+function changeImgHeight(){
+  let h = parseInt(imgHeightInp.value);
+  if (isNaN(h)){
+    imgHeight = 0;
+  } else {
+    imgHeight = h;
+  }
+  if (VERBOSE) console.log("(Maximum) image height set to "+imgHeight);
 }
 
 /**
@@ -520,13 +609,12 @@ function changeImgWidth(){
  */
 function changeImgDpi(){
   let d = parseInt(imgDpiInp.value);
-  //console.log("dpi changed to: "+d);
   if (!isNaN(d)){
     imgDpi = d;
   } else {
     imgDpi = defaultImgDpi;
   }
-  console.log("dpi changed to: "+imgDpi);
+  if (VERBOSE) console.log("dpi changed to: "+imgDpi);
 }
 
 
@@ -611,12 +699,148 @@ function loadSelectedRows(){
   lastPageSpan.textContent = inputData.length / 2;
   calcDiff();
   uploadModal.style.display = "none";
+  editModal.style.display = "none";
   paginationDiv.style.display = "block";
 }
 
 
 ////////////////////// helper functions for main functions /////////////////////
 
+function removeEmptySpans(node) {
+  const spans = node.querySelectorAll("span");
+  spans.forEach(span => {
+    const isEmpty =
+      span.childNodes.length === 0 ||
+      (span.childNodes.length === 1 &&
+        span.firstChild.nodeType === Node.TEXT_NODE &&
+        //span.textContent.trim() === '');
+        span.textContent === '');
+
+    if (isEmpty) {
+      span.remove();
+    }
+  });
+}
+
+/**
+ * Flatten the nested spans created by the highlighter
+ * @param {Node} rootElement The element in whose descendents we will flatten the nested spans
+ */
+function flattenNestedSpansWithSameClass(rootElement) {
+  function createSpan(text, className, style) {
+    const span = document.createElement("span");
+    span.className = className;
+    if (style) span.setAttribute("style", style);
+    span.textContent = text;
+    return span;
+  }
+
+  function flatten(span, className, style) {
+    const result = [];
+    let buffer = '';
+
+    span.childNodes.forEach(child => {
+      if (child.nodeType === Node.TEXT_NODE) {
+          buffer += child.textContent;
+      } else if (child.nodeType === Node.ELEMENT_NODE && child.tagName === "SPAN") {
+        // Flush buffered text before nested span
+        if (buffer) {
+          result.push(createSpan(buffer, className, style));
+        }
+        buffer = '';
+
+        // Recursively flatten nested span
+        const nested = flatten(child, child.className, child.getAttribute("style"));
+        result.push(...nested);
+      } else {
+        result.push(child);
+      }
+    });
+
+    // Flush trailing buffer
+    if (buffer) {
+      result.push(createSpan(buffer, className, style));
+    }
+    return result;
+  }
+
+  function recurse(node) {
+      const spans = Array.from(node.querySelectorAll("span"));
+      spans.reverse(); // Process deepest spans first
+
+      for (const span of spans) {
+      const flatSpans = flatten(span, span.className, span.getAttribute("style"));
+      flatSpans.forEach(s => span.parentNode.insertBefore(s, span));
+      span.remove();
+      }
+  }
+
+  recurse(rootElement);
+}
+
+/**
+ * Merge spans that have the same class and style
+ */
+function mergeAdjacentSpans(root) {
+  function isSameStyle(span1, span2) {
+    return (
+      span1.className === span2.className &&
+      (span1.getAttribute("style") || "") === (span2.getAttribute("style") || "")
+    );
+  }
+
+  function isIgnorableTextNode(node) {
+    //return node.nodeType === Node.TEXT_NODE && node.textContent.trim() === '';
+    return node.nodeType === Node.TEXT_NODE && node.textContent === '';
+  }
+
+  function getNextMeaningfulSibling(node) {
+    let next = node.nextSibling;
+    while (next && isIgnorableTextNode(next)) {
+      const toRemove = next;
+      next = next.nextSibling;
+      toRemove.remove(); // Clean whitespace
+    }
+    return next;
+  }
+
+  function mergeSiblingsIn(parent) {
+    let child = parent.firstChild;
+
+    while (child) {
+      const next = getNextMeaningfulSibling(child);
+
+      if (
+        child.nodeType === Node.ELEMENT_NODE &&
+        next &&
+        next.nodeType === Node.ELEMENT_NODE &&
+        child.tagName === "SPAN" &&
+        next.tagName === "SPAN" &&
+        isSameStyle(child, next)
+      ) {
+        // Merge next span into current one
+        child.textContent += next.textContent;
+        next.remove();
+        continue; // re-check from the current child
+      }
+
+      // Recurse inside element children
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        mergeSiblingsIn(child);
+      }
+
+      child = child.nextSibling;
+    }
+  }
+
+  mergeSiblingsIn(root);
+}
+
+function postProcessSpans(root){
+  console.log("post-processing...");
+  flattenNestedSpansWithSameClass(root);
+  mergeAdjacentSpans(root);
+}
 
 /**
  * Add the calculated diff html strings to the output table
@@ -636,7 +860,7 @@ function displayDiff(aHtml, bHtml){
     let a = aHtmlSplit[i];
     let b = bHtmlSplit[i];
     // add the html to the output:
-    let newRow = document.getElementById("outputTable").insertRow(-1);
+    let newRow = outputDiv.getElementsByClassName("outputTable")[0].insertRow(-1);
     let cellA = newRow.insertCell(0);
     cellA.innerHTML = a; 
     let cellB = newRow.insertCell(1);
@@ -721,6 +945,8 @@ function getNodeWidth(node) {
   var leftBorder = px(node, 'border-left-width');
   var rightBorder = px(node, 'border-right-width');
   return node.scrollWidth + leftBorder + rightBorder;
+  // from ChatGPT:
+  //return node.offsetWidth;
 }
 
 /**
@@ -733,13 +959,16 @@ function getNodeHeight(node) {
   var topBorder = px(node, 'border-top-width');
   var bottomBorder = px(node, 'border-bottom-width');
   return node.scrollHeight + topBorder + bottomBorder;
+  //return node.offsetHeight;
 }
 
 /**
  * Download output table as svg image
  */
 async function downloadSvg(){
-  domtoimage.toSvg(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
+  //domtoimage.toSvg(document.getElementById("outputTable"), { bgcolor: 'white' }).then(dataUrl => {
+  let tableEl = editOutputDiv.getElementsByClassName("outputTable")[0];
+  domtoimage.toSvg(tableEl, { bgcolor: 'white' }).then(dataUrl => {
     downloadFile(dataUrl, "diff.svg");
   });
 }
@@ -747,71 +976,104 @@ async function downloadSvg(){
 
 /**
  * Download output table as raster image
- * @param {String} outputType Image type (png, tiff)
+ * @param {String} outputType Image type (png, tiff, jpeg)
  */
 async function downloadRaster(outputType){
   // update the values for the image width and dpi from the Options field:
   changeImgWidth();
+  changeImgHeight();
   changeImgDpi();
 
-  let fs = parseInt(fontSizeInp.value);
-  let options = { bgcolor: 'white' };
-
-
-  //if (!imgWidth) {imgWidth = defaultImgWidth;}
-  //if (!imgDpi) {imgDpi = defaultImgDpi;}
+  if (imgWidth === 0 && imgHeight === 0) {
+    if (VERBOSE) console.log("Max image height and width were not set - using defaults to determine output size!")
+    imgWidth = defaultImgWidth;
+    imgHeight = defaultImgHeight;
+    console.log(`Use default output size: imgWidth set to ${imgWidth}, imgHeight to ${imgHeight}`);
+  }
 
   // get the current width and height of the table, in pixels:
-  let nodeWidth = getNodeWidth(document.getElementById("outputTable"));
-  let nodeHeight = getNodeHeight(document.getElementById("outputTable"));
+  //let tableEl = editOutputDiv.getElementsByClassName("outputTable")[0]
+  let tableEl
+  if (editModal.style.display == "block") {
+    tableEl = editOutputDiv.getElementsByClassName("outputTable")[0]
+  } else {
+    tableEl = outputDiv.getElementsByClassName("outputTable")[0]
+  }
+  let nodeWidth = getNodeWidth(tableEl);
+  let nodeHeight = getNodeHeight(tableEl);
   console.log("Original image size: "+nodeWidth+" x "+nodeHeight+" px");
 
-  // calculate the output width, in pixels:
-  let w = mmToPix(imgWidth, imgDpi);
-  options.width = Math.ceil(w);
-  console.log(`Desired output width: ${imgWidth} mm (= ${imgWidth/inch} inch), dpi: ${imgDpi} => ${w} px (rounded to ${options.width} px)`);
+  // calculate the output width and height, in pixels:
+  let outputPixelWidth = mmToPix(imgWidth, imgDpi);
+  let outputPixelHeight = mmToPix(imgHeight, imgDpi);
+  if (VERBOSE) console.log(`Max output width: ${outputPixelWidth} px; Max output height: ${outputPixelHeight} px; `)
 
-  // calculate the factor by which the height and font size will need to be multiplied:
-  let q = w / nodeWidth;
-
-  // calculate the output image's height
-  options.height = Math.ceil(nodeHeight * q);
-  console.log(`Output image size: ${options.width} x ${options.height} px`);
-
-  // temporarily adapt font size to output measurements:
-  let tempfs = Math.floor(fs * q);
-  console.log(`original font size: ${fs}, q: ${q}, output font size: ${tempfs}`);
-  document.documentElement.style.setProperty("--ar-chars-font-size", `${tempfs}px`);
-
-  // increase the width of the column divider and padding:
-  let colDivWidth = Math.floor(1 * q) | 1;
-  document.documentElement.style.setProperty("--col-divider", `solid ${colDivWidth}px lightgrey`);
-  let tempPadding = Math.floor(10*q);
-  document.documentElement.style.setProperty("--col-padding", `${tempPadding}px`);
+  // check if the output pixel height would be larger than the maximum allowed pixel height:
+  let scaleFactor = 1;
+  if (imgHeight === 0) {
+    if (VERBOSE) console.log("Max image height was not set - using image width to determine output size!")
+    scaleFactor = outputPixelWidth / nodeWidth;
+  } else if (imgWidth === 0){
+    if (VERBOSE) console.log("Max image width was not set - using image height to determine output size!")
+    scaleFactor = outputPixelHeight / nodeHeight;
+  } else {
+    if (VERBOSE) console.log("Max image width and height set - check which one does not violate the other!")
+    let widthScaleFactor = outputPixelWidth / nodeWidth;
+    let theoreticalOutputHeight = nodeHeight * widthScaleFactor;
+    if (VERBOSE) console.log(`taking width as base: output file will be ${outputPixelWidth} x ${theoreticalOutputHeight} px`);
+    if (theoreticalOutputHeight <= outputPixelHeight) {
+      if (VERBOSE) console.log("-> this is within the bounds of the maximum output size, so we'll use this factor: " + widthScaleFactor); 
+      scaleFactor = widthScaleFactor;
+    } else {
+      if (VERBOSE) console.log("-> this is larger than the maximum output height!"); 
+      let heightScaleFactor = outputPixelHeight / nodeHeight;
+      let theoreticalOutputWidth = nodeWidth * heightScaleFactor;
+      if (VERBOSE) console.log(`taking height as base: output file will be ${theoreticalOutputWidth} x ${outputPixelHeight} px`);
+      if (theoreticalOutputWidth <= outputPixelHeight) {
+        if (VERBOSE) console.log("-> this is within the bounds of the maximum output size, so we'll use this factor: " + heightScaleFactor); 
+        scaleFactor = heightScaleFactor;
+      } else {
+        console.log("Error: neither width nor height result in an acceptable factor");
+      }
+    }
+  }
   
-  if (VERBOSE) {console.log(options);}
+  console.log(`Output image size: ${Math.ceil(nodeWidth*scaleFactor)} x ${Math.ceil(nodeHeight*scaleFactor)} px`);
 
   if (outputType==="png"){
     console.log("Downloading png file");
-    domtoimage.toPng(document.getElementById("outputTable"), options).then(dataUrl => {
-      downloadFile(dataUrl, "diff.png");
-    });
+    // using snapdom's download function
+    await snapdom.download(tableEl, {
+        format: "png",
+        name: "diff",
+        scale: scaleFactor,
+        embedFonts: true
+      }
+    );
+  } else if (outputType==="jpeg"){
+    console.log("Downloading jpeg file");
+    // using snapdom's download function
+    await snapdom.download(tableEl, {
+        format: "jpg",
+        name: "diff",
+        scale: scaleFactor,
+        embedFonts: true
+      }
+    );
   } else if (outputType==="tiff"){
-    // THIS IS NOT CURRENTLY WORKING! Uses https://github.com/motiz88/canvas-to-tiff
+    console.log("Tiff output is currently not working");
+    /*// THIS IS NOT CURRENTLY WORKING! Uses https://github.com/motiz88/canvas-to-tiff
     //   CanvasToTIFF.toObjectURL is not returning anything...
     console.log("Downloading tiff");
-    CanvasToTIFF.toObjectURL(document.getElementById("outputTable"),
+    //CanvasToTIFF.toObjectURL(document.getElementById("outputTable"),
+    CanvasToTIFF.toObjectURL(tableEl,
                            function(dataUrl) {
                              console.log("Really downloading tiff now");
                              downloadFile(dataUrl, "diff.tiff");
                              console.log("Tiff downloaded");
                            },
-                           options);
+                           options);*/
   }
-  // reset the font size, divider width and padding:
-  document.documentElement.style.setProperty("--ar-chars-font-size", `${fs}px`);
-  document.documentElement.style.setProperty("--col-divider", `solid 1px lightgrey`);
-  document.documentElement.style.setProperty("--col-padding", "10px");
 }
 
 /**
@@ -826,6 +1088,13 @@ async function downloadPng(){
  */
 async function downloadTiff(){
   downloadRaster("tiff");
+}
+
+/**
+ * Download output table as jpeg image
+ */
+async function downloadJpeg(){
+  downloadRaster("jpeg");
 }
 
 /**
@@ -893,7 +1162,8 @@ function downloadFile(dataUrl, fn){
  */
 async function calcDiff() {
   // empty the existing output table:
-  document.getElementById("outputTable").innerHTML = "";
+  //document.getElementById("outputTable").innerHTML = "";
+  outputDiv.getElementsByClassName("outputTable")[0].innerHTML = "";
 
   // load variables from inputs:
   intoRows = rowsChk.checked;

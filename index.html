@@ -17,8 +17,13 @@
 <script src="js/html2canvas.min.js"></script>
 <script src="js/dom-to-image.js"></script>
 <script src="js/canvastotiff.js"></script>
+<script src="js/snapdom.js" type="module"></script>
 <script src="js/index.js" type="module"></script>
 <script src="js/kitabDiff.js" type="module"></script>
+<script src="js/TextHighlighter.js"></script>
+<script src="js/ColorPicker.js"></script>
+
+
 
 <style>
   :root {
@@ -105,7 +110,7 @@
     background-color: PaleGoldenrod;
     border-radius: 3px;
   }
-  #options {
+  .options {
     width: 95%;
     background-color: darkgrey;
     padding-left: 10px;
@@ -304,7 +309,33 @@
   	left: 0.25em;
   	transform: rotate(-135deg);
   }
+  /*https://github.com/mir3z/texthighlighter/blob/master/demos/assets/ColorPicker.css*/
+  .color-picker {
+    display: block;
+    margin: 10px 0 5px;
+    text-align: center;
+  }
 
+  .color-picker div {
+    width: 23px;
+    height: 23px;
+    border: 1px solid #111;
+    border-radius: 12px;
+    margin: 5px 8px;
+    display: inline-block;
+    cursor: pointer;
+  }
+
+  .color-picker div:hover {
+    border: 1px solid #444;
+  }
+
+  .color-picker div.selected-color {
+    box-shadow: #666 0 0 4px 2px;
+  }
+  .highlighted {
+    border-radius: 3px;
+  }
 </style>
 
 
@@ -347,9 +378,7 @@
   </span>
   <span id="outputButtons">
     <input type="button" id="inputButton" value="Show input">
-    <input type="button" id="svgButton" value="Download svg">
-    <input type="button" id="pngButton" value="Download png">
-    <input type="button" id="tiffButton" value="Download tiff">
+    <input type="button" id="editButton" value="Edit & save">
   </span>
   <span>
     <input type="button" name="optionsButton" id="optionsButton" value="Options">
@@ -359,7 +388,7 @@
   </span>
 </div>
 
-<div id="options">
+<div id="options" class="options">
   <p style="padding-top: 10px">Options:</p>
   <div style="margin-left: 20px;">
     <label for="highlightDiffBtn">Highlight </label>
@@ -381,18 +410,6 @@
     <label for="normalizeYaCheck">alif maqṣūra / final yā' (ي = ى) </label>
     <input type="checkbox" id="normalizeHaCheck" name="normalizeHaCheck" checked>
     <label for="normalizeHaCheck">tā marbūṭa / final hā' (ة = ه)</label>
-    <br>
-    <label for="fontSizeInput">Font size: </label>
-    <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="20">
-    <label for="fontSizeInput">px</label>
-    <br>
-    <br>
-    <label for="imgWidthInput">Image size: width: </label>
-    <input type="text" class="num-input" id="imgWidthInput" name="imgWidthInput" value="200">
-    <!--<label for="imgHeightInput">mm; height: </label>
-    <input type="text" class="num-input" id="imgHeightInput" name="imgHeightInput" value="">-->
-    <label for="imgDpiInput">mm; dpi: </label>
-    <input type="text" class="num-input" id="imgDpiInput" name="imgDpiInput" value="300">
     <br>
     <label for="ngramInput">Refine the results using shingled character</label>
     <input type="text" class="num-input" id="ngramInput" name="ngramInput" value="3" checked>
@@ -419,27 +436,15 @@
 </div>
 
 <div id="outputDiv">
-  <!--<div style="display: inline-block; margin: 0 auto; text-align: center;">
-    <span class="chevron top"></span>
-  </div>-->
   <div class="resize-container">
-    <!--
-    <div class="milestoneLocatorA">
-      <div class="milestoneLocatorLineA"></div>
-    </div>-->
     <div class="container">
-      <table id="outputTable"></table>
+      <table class="outputTable"></table>
     </div>
-    <!--
-    <div class="milestoneLocatorB">
-      <div class="milestoneLocatorLineB"></div>
-    </div>-->
   </div>
   <div id="outputSingleDiv">
     <p>Original inline wikEdDiff output:</p>
     <div id="cDiff"></div>
   </div>
-  <!--<span class="chevron bottom"></span>-->
 </div>
 
 <div id="pagination">
@@ -455,7 +460,7 @@
 
 <div class="modal" id="uploadModal">
   <div class="modal-content">
-    <span class="close">&times;</span>
+    <span class="close" id="closeUploadBtn">&times;</span>
     <p>Choose a passim alignment file (srt, csv) to display:</p>
     <input type="file" name="inputfileButton" id="inputfileButton" accept=".csv, .tsv, .srt">
     <div id="selectRowsControls">
@@ -469,6 +474,46 @@
       <table id="csvTable"></table>
     </div>
   </div>
+</div>
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <span class="close" id="closeEditBtn">&times;</span>
+    <div id="editButtons">
+      <span id="editOutputButtons">
+        <!-- hide the buttons for image types for which we don't have a working solution:
+        <input type="button" id="svgButton" value="Download svg">
+        <input type="button" id="tiffButton" value="Download tiff">-->
+        <input type="button" id="pngButton" value="Download png">
+        <input type="button" id="jpegButton" value="Download jpeg">
+      </span>
+      <span>
+        <input type="button" name="editOptionsButton" id="editOptionsButton" value="Options">
+      </span>
+      <span id="editOptionButtons">
+        <input type="button" name="editResetButton" id="editResetButton" value="Reset options">
+      </span>
+    </div>
+    <div id="editOptions" class="options">
+      <p style="padding-top: 10px">Options:</p>
+      <div style="margin-left: 20px;">
+        <label for="fontSizeInput">Font size: </label>
+        <input type="text" class="num-input" id="fontSizeInput" name="fontSizeInput" value="16">
+        <label for="fontSizeInput">px</label>
+        <br>
+        <label for="imgWidthInput">Image size: (maximum) width: </label>
+        <input type="text" class="num-input" id="imgWidthInput" name="imgWidthInput" value="120">
+        <label for="imgHeightInput">mm; (maximum) height: </label>
+        <input type="text" class="num-input" id="imgHeightInput" name="imgHeightInput" value="">
+        <label for="imgDpiInput">mm; dpi: </label>
+        <input type="text" class="num-input" id="imgDpiInput" name="imgDpiInput" value="300">
+      </div>
+    </div>
+    <div>Pick a color and select text to edit the highlighting:<div>
+    <div class="color-picker" id="colorpicker"></div>
+    <div id="editOutputDiv">
+    </div>
+  </div>
+  
 </div>
 
 <div id="svgDataUrl" style="display: none"></div>

@@ -173,4 +173,6 @@ The kitabDiff javascript library can also be used separately to build your own a
   for example, *wa-qawm* and *wa-qawmuhu* are highlighted as entirely different
   while there is only one letter different)
 * do not split words in multi-line modus
-* find out why svg files are sometimes very large; MANY spans in it??
+* find a good way to create svg files; the current solutions (dom-to-image, html-to-image)
+  use foreignobject in svg to inject the html - such svgs cannot be viewed or edited
+  in graphical programs.
